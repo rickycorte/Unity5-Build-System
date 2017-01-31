@@ -26,9 +26,6 @@ public class ObjectPlacer : MonoBehaviour {
 
     [SerializeField] float maxPlaceDistance = 10f;
 
-    [Tooltip("Value to be subtracted from y when the object pivot is venter and the normal of the ground is not rect")]
-    [SerializeField] float verticalPlaceOffset = 0.12f;
-
     [SerializeField] bool placeInScreenCenter = false;
 
     [Tooltip("Face the object to the player, THIS BLOCKS SNAP ROTAION!")]
@@ -70,10 +67,11 @@ public class ObjectPlacer : MonoBehaviour {
 
     bool canPlace = false;
 
-    bool isObjectPivotOnBase = false;
     float pivotMargin = .1f;
 
     bool mouseIsNotOnUI = false;
+
+    bool usingFakePivot = false;
 
     bool[] bodiesPrevState;
 
@@ -198,7 +196,6 @@ public class ObjectPlacer : MonoBehaviour {
             ghostRenderer = renderer;
             EnableGhostMaterials();
             ghostRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // remove shadows
-            CheckIfObjectPivotIsCenter();
         }
 
         //remove collisions and physics
@@ -207,6 +204,12 @@ public class ObjectPlacer : MonoBehaviour {
 
         //reset old object rotation
         ObjectSnapCurrentRotaion = 0;
+
+        //check where is the pivot, if is notin the base create one
+        usingFakePivot = false;
+        bool objPivotIsBase = CheckIfObjectPivotIsCenter();
+        Debug.Log("Pivot is base: " + objPivotIsBase);
+        if (!objPivotIsBase) CreateBasePivot();
     }
 
 
@@ -231,20 +234,6 @@ public class ObjectPlacer : MonoBehaviour {
         if (Physics.Raycast(r, out hit, maxPlaceDistance, GroundLayer))
         {
             Vector3 pos = hit.point;
-            //place object on surface based on its bounds
-            // this is not necessary if object pivot is not center
-            //NOTE: if the pivot is not in base this script wont work
-
-            //TODO: handle different pivots
-            if (ghostRenderer != null && !isObjectPivotOnBase)
-            {
-                //pos.y += ghostRenderer.bounds.extents.y;
-                //if (hit.normal.normalized != Vector3.up)
-                //{
-                //    pos.y -= verticalPlaceOffset;
-                //}
-                pos += Vector3.Scale(ghostRenderer.bounds.extents, hit.normal.normalized);
-            }
             ghostObjInstance.position = pos;
             AllignGhostToSurface(hit.normal);
         }
@@ -261,6 +250,11 @@ public class ObjectPlacer : MonoBehaviour {
             EnableGhostObjCollision(true); //reset collisions
             ghostRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On; // enable shadows
             Debug.Log("Created: " + ghostObjInstance.name);
+            if (usingFakePivot)
+            {
+                ghostObjInstance.GetComponent<PivotHelper>().DeletePivot();
+            }
+
             ghostObjInstance = null; //leave the object in the scene
 
             CreateGhostObject(); //create a new ghost object
@@ -287,22 +281,38 @@ public class ObjectPlacer : MonoBehaviour {
 
         ghostObjInstance.rotation = Quaternion.FromToRotation(Vector3.up, hitNormal) * Quaternion.Euler(new Vector3(0, ObjectSnapCurrentRotaion, 0)) ;
 
-
     }
 
     //check if the object pivot is in center or not
-    void CheckIfObjectPivotIsCenter()
+    bool CheckIfObjectPivotIsCenter()
     {
-        if (ghostRenderer == null) return;
+        if (ghostRenderer == null)
+        {
+            Debug.LogError("NO GHOST RENDER FOUND!");
+            return false;
+        }
 
         Vector3 delta = ghostObjInstance.position - ghostRenderer.bounds.center;
-        if (delta.magnitude <= pivotMargin)
+        if (delta.magnitude >= pivotMargin && delta.y<0) //delta.y<0 fix issues that not centerd pivots above the object center were taken as base pivots
         {
-            isObjectPivotOnBase = false;
+            return true;
         }
-        else isObjectPivotOnBase = true;
+        else return false;       
+    }
 
-        Debug.Log("Obj pivot is in base: " + isObjectPivotOnBase);
+    //create a pivot parent to better place the object
+    void CreateBasePivot()
+    {
+        GameObject pivotG = new GameObject("Temp_Ghost_Pivot_Parent"); // create parent
+        pivotG.AddComponent<PivotHelper>(); // add helper class to remove the pivot
+
+        Vector3 meshCenter = ghostRenderer.bounds.extents;
+        meshCenter.x = 0; meshCenter.z = 0;
+        Transform pivotT = pivotG.transform;
+        ghostObjInstance.SetParent(pivotT); // set the current objet as child 
+        ghostObjInstance.localPosition = meshCenter; // move the object up to make the parent the base pivot
+        ghostObjInstance = pivotT;
+        usingFakePivot = true;
     }
 
 
