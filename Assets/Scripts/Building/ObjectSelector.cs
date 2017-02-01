@@ -19,6 +19,10 @@ public class ObjectSelector : MonoBehaviour {
     [Tooltip("UI menu that you want to use to display the spawnable objects")]
     [SerializeField] GameObject BuilderMenuPrefab;
 
+    [Header("Input Settings")]
+
+    [SerializeField] KeyCode CollapseMenuKey = KeyCode.None;
+
 
     /****************************************************
     * Variables & Components
@@ -84,6 +88,10 @@ public class ObjectSelector : MonoBehaviour {
         {
             ToggleUI();
             isOpen = !isOpen;
+        }
+        if (Input.GetKeyDown(CollapseMenuKey) && isActive)
+        {
+            if (builderUI != null) builderUI.CollapseMenu();
         }
     }
 

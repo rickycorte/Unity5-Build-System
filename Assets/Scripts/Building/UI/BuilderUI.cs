@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 //Se con invio viene premuto il bottone successivo basta andare sull oggetto EventSystem > Standalone Input Module e rimuovere Submit Button
 
@@ -21,12 +22,18 @@ public class BuilderUI : MonoBehaviour {
     [Tooltip("Button prefab to show an item")]
     [SerializeField] BuilderObjectUI objPrefab;
 
+    [SerializeField] Text CollapseMenuButtonText;
+
     /****************************************************
     * Variables & Components
     * *************************************************/
 
     CanvasGroup cv;
     Animator anim;
+
+    bool isMenuCollapsed = false;
+
+    BuilderObjectUI selectedObject;
 
     /****************************************************
     * initialization
@@ -51,9 +58,7 @@ public class BuilderUI : MonoBehaviour {
     //apri/chiudi il menu
     public void ToggleMenu()
     {
-        anim.SetBool("isOpen", !cv.interactable);
-        cv.interactable = !cv.interactable;
-        cv.blocksRaycasts = !cv.blocksRaycasts;
+        ToggleMenu(!cv.blocksRaycasts);
     }
 
     public void ToggleMenu(bool val)
@@ -61,6 +66,30 @@ public class BuilderUI : MonoBehaviour {
         anim.SetBool("isOpen", val);
         cv.interactable = val;
         cv.blocksRaycasts = val;
+        SetIsCollapsed(false);
+    }
+
+
+
+    /****************************************************
+    * Extrernal Actions
+    * *************************************************/
+
+    //collape the menu but not toggle it so ic can be reopened
+    public void CollapseMenu()
+    {
+        isMenuCollapsed = !isMenuCollapsed;
+        SetIsCollapsed(isMenuCollapsed);
+    }
+
+    //highlight the selected item and deselect the current one
+    public void SetSelectedItem(BuilderObjectUI bo)
+    {
+        if (selectedObject != null) selectedObject.Select(false);
+
+        bo.Select(true);
+        selectedObject = bo;
+         
     }
 
 
@@ -76,6 +105,19 @@ public class BuilderUI : MonoBehaviour {
             var item = Instantiate(objPrefab,ButtonsParent).GetComponent<BuilderObjectUI>();
             item.SetUp(container.items[i]);
             item.AddButtonListner(selector.UseItem, i);
+
+            if (i == 0) // select the first button
+            {
+                SetSelectedItem(item);
+            }
         }
+    }
+
+    //collapse the menu without disabling it
+    void SetIsCollapsed(bool val)
+    {
+        isMenuCollapsed = val;
+        anim.SetBool("isCollapsed", val);
+        if (CollapseMenuButtonText != null) CollapseMenuButtonText.text = (val) ? ">>" : "<<";
     }
 }
