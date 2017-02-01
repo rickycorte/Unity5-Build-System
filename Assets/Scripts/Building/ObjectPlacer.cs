@@ -36,16 +36,16 @@ public class ObjectPlacer : MonoBehaviour {
     [Header("Input Settings")] // -------------------------------------------------
 
     [Tooltip("Key to press to enable the builder mode. This is also used by ObjectSelector")]
-    [SerializeField] KeyCode ToggleKey = KeyCode.E;
+    [SerializeField] KeyCode toggleKey = KeyCode.E;
 
     [Tooltip("Key to press to place a item in the scene")]
-    [SerializeField] KeyCode PlaceKey = KeyCode.Mouse0;
+    [SerializeField] KeyCode placeKey = KeyCode.Mouse0;
 
     [Tooltip("Key to press rotate (forward) the object based on snapRotaionDeg")]
-    [SerializeField] KeyCode PositiveRotateKey = KeyCode.Mouse1;
+    [SerializeField] KeyCode positiveRotateKey = KeyCode.Mouse1;
 
     [Tooltip("Key to press rotate (backward) the object based on snapRotaionDeg")]
-    [SerializeField] KeyCode NegativeRotateKey = KeyCode.None;
+    [SerializeField] KeyCode negativeRotateKey = KeyCode.None;
 
     /****************************************************
     * Public variables
@@ -54,7 +54,7 @@ public class ObjectPlacer : MonoBehaviour {
 
     public enum RotaionMode { snap, facePlacer };
 
-    public KeyCode TOGGLEKEY { get { return ToggleKey; } }
+    public KeyCode TOGGLEKEY { get { return toggleKey; } }
 
     public bool IsActive { get { return isActive; } }
 
@@ -75,7 +75,9 @@ public class ObjectPlacer : MonoBehaviour {
 
     bool[] bodiesPrevState;
 
-    float ObjectSnapCurrentRotaion = 0;
+    float objectSnapCurrentRotaion = 0;
+
+    Vector3 pivotOffsetExtra;
 
 
     /****************************************************
@@ -109,7 +111,7 @@ public class ObjectPlacer : MonoBehaviour {
     void Update()
     {
         //toggle contruction mode
-        if (Input.GetKeyDown(ToggleKey) && isActive)
+        if (Input.GetKeyDown(toggleKey) && isActive)
         {
             Toggle();
         }
@@ -117,21 +119,19 @@ public class ObjectPlacer : MonoBehaviour {
         //place the object
         if(canPlace)
         {
-            if(Input.GetKeyDown(PlaceKey) && mouseIsNotOnUI)
+            if(Input.GetKeyDown(placeKey) && mouseIsNotOnUI)
                PlaceGhostObject();
 
             if (!faceMe)
             {
 
-                if (Input.GetKeyDown(PositiveRotateKey))
+                if (Input.GetKeyDown(positiveRotateKey))
                     SnapRotation(+1); // positive rotation
 
-                if (Input.GetKeyDown(NegativeRotateKey))
+                if (Input.GetKeyDown(negativeRotateKey))
                     SnapRotation(-1); // negative rotation
             }
         }
-
-
 
     }
 
@@ -203,10 +203,11 @@ public class ObjectPlacer : MonoBehaviour {
         EnableGhostObjRigidbodies(false);
 
         //reset old object rotation
-        ObjectSnapCurrentRotaion = 0;
+        objectSnapCurrentRotaion = 0;
 
-        //check where is the pivot, if is notin the base create one
+        //check where is the pivot, if is not in the base create a fake one
         usingFakePivot = false;
+        pivotMargin = ghostRenderer.bounds.extents.y * 2 / 3; //set the base pivot margin. its' height must be lower than obj center * 2/3
         bool objPivotIsBase = CheckIfObjectPivotIsCenter();
         Debug.Log("Pivot is base: " + objPivotIsBase);
         if (!objPivotIsBase) CreateBasePivot();
@@ -231,11 +232,12 @@ public class ObjectPlacer : MonoBehaviour {
             r = new Ray(camT.position, camT.forward);
         }
 
+        //find hit position and move there the object
         if (Physics.Raycast(r, out hit, maxPlaceDistance, GroundLayer))
         {
             Vector3 pos = hit.point;
             ghostObjInstance.position = pos;
-            AllignGhostToSurface(hit.normal);
+            AlignGhostToSurface(hit.normal);
         }
     }
 
@@ -275,11 +277,11 @@ public class ObjectPlacer : MonoBehaviour {
     * *************************************************/
 
     //align ghost object to surface based on raycast hit normal
-    void AllignGhostToSurface(Vector3 hitNormal)
+    void AlignGhostToSurface(Vector3 hitNormal)
     {
         if (ghostObjInstance == null) return;
 
-        ghostObjInstance.rotation = Quaternion.FromToRotation(Vector3.up, hitNormal) * Quaternion.Euler(new Vector3(0, ObjectSnapCurrentRotaion, 0)) ;
+        ghostObjInstance.rotation = Quaternion.FromToRotation(Vector3.up, hitNormal) * Quaternion.Euler(new Vector3(0, objectSnapCurrentRotaion, 0)) ;
 
     }
 
@@ -293,11 +295,16 @@ public class ObjectPlacer : MonoBehaviour {
         }
 
         Vector3 delta = ghostObjInstance.position - ghostRenderer.bounds.center;
-        if (delta.magnitude >= pivotMargin && delta.y<0) //delta.y<0 fix issues that not centerd pivots above the object center were taken as base pivots
+        if (delta.magnitude >= pivotMargin && delta.y < 0) //delta.y < 0 fix issues that not centerd pivots above the object center were taken as base pivots
         {
+            pivotOffsetExtra = Vector3.zero;
             return true;
         }
-        else return false;       
+        else
+        {
+            pivotOffsetExtra = delta; // save pivot delta to use to create a fake pivot
+            return false;
+        }   
     }
 
     //create a pivot parent to better place the object
@@ -306,13 +313,18 @@ public class ObjectPlacer : MonoBehaviour {
         GameObject pivotG = new GameObject("Temp_Ghost_Pivot_Parent"); // create parent
         pivotG.AddComponent<PivotHelper>(); // add helper class to remove the pivot
 
+        //recover mesh center
         Vector3 meshCenter = ghostRenderer.bounds.extents;
-        meshCenter.x = 0; meshCenter.z = 0;
+        meshCenter.x = pivotOffsetExtra.x;
+        meshCenter.z = pivotOffsetExtra.z;
+        meshCenter.y += pivotOffsetExtra.y; // apply pivot delta
+
         Transform pivotT = pivotG.transform;
-        ghostObjInstance.SetParent(pivotT); // set the current objet as child 
+        ghostObjInstance.SetParent(pivotT); // set the current object as child 
         ghostObjInstance.localPosition = meshCenter; // move the object up to make the parent the base pivot
-        ghostObjInstance = pivotT;
-        usingFakePivot = true;
+
+        ghostObjInstance = pivotT; // replace old object reference with the parent
+        usingFakePivot = true; //remember that we created a fake pivot
     }
 
 
@@ -320,13 +332,13 @@ public class ObjectPlacer : MonoBehaviour {
     void RotateGhostToFaceMe()
     {
         Vector3 dir = myTransform.position - ghostObjInstance.position;
-        ObjectSnapCurrentRotaion = Quaternion.LookRotation(dir.normalized).eulerAngles.y;
+        objectSnapCurrentRotaion = Quaternion.LookRotation(dir.normalized).eulerAngles.y;
     }
 
     //snap rotation of the object
     void SnapRotation(int mult)
     {
-        ObjectSnapCurrentRotaion += mult*snapRotationAngle;
+        objectSnapCurrentRotaion += mult*snapRotationAngle;
     }
 
     /****************************************************
@@ -347,21 +359,38 @@ public class ObjectPlacer : MonoBehaviour {
     //set all rigidbodies to be kinematic or reset them viwh previous state
     void EnableGhostObjRigidbodies(bool val)
     {
+        //get all bodies
         var bodies = ghostObjInstance.GetComponentsInChildren<Rigidbody>();
-        if(val == false)
-           bodiesPrevState = new bool[bodies.Length];
+
+        if (val == false)
+        {
+            GetOldRigidBodyStateAndOvverride(val, bodies);
+        }
+        else
+        {
+            SetOldRigidbodyState(bodies);
+        }
+
+    }
+
+    //save the old state for the body reset
+    void GetOldRigidBodyStateAndOvverride(bool val, Rigidbody[] bodies)
+    {
+        bodiesPrevState = new bool[bodies.Length];
 
         for (int i = 0; i < bodies.Length; i++)
         {
-            if (val == false)
-            {
-                bodiesPrevState[i] = bodies[i].isKinematic; //save the old state for the body reset
-                bodies[i].isKinematic = !val;
-            }
-            else
-            {
-                bodies[i].isKinematic = bodiesPrevState[i]; //set the old body state
-            }
+            bodiesPrevState[i] = bodies[i].isKinematic;
+            bodies[i].isKinematic = !val;
+        }
+    }
+
+    //set the old body state
+    void SetOldRigidbodyState(Rigidbody[] bodies)
+    {
+        for (int i = 0; i < bodies.Length; i++)
+        {
+            bodies[i].isKinematic = bodiesPrevState[i]; 
         }
     }
 
@@ -371,15 +400,20 @@ public class ObjectPlacer : MonoBehaviour {
     {
         if (ghostRenderer == null) return;
         oldMaterials = ghostRenderer.materials;
-        //create a list of ghost materials to apply
-        Material[] ghosts = new Material[ghostRenderer.materials.Length];
+
+        ghostRenderer.materials = CreateGhostMaterialArray(ghostRenderer.materials.Length);
+    }
+
+    //create a list of ghost materials to apply
+    Material[] CreateGhostMaterialArray(int lenght)
+    {
+        Material[] ghosts = new Material[lenght];
         for (int i = 0; i < ghosts.Length; i++)
         {
             ghosts[i] = ghostMaterial;
         }
-        ghostRenderer.materials = ghosts;
+        return ghosts;
     }
-
 
 
     /****************************************************
