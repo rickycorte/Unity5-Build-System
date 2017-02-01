@@ -33,7 +33,7 @@ public class BuilderObjectUI : MonoBehaviour {
             );
     }
 
-    //imposta immagine e testo
+    //set image and text
     public void SetUp(ScriptableObjectToPlace o)
     {
         if (itemName != null) itemName.text = o.Name;
@@ -41,9 +41,9 @@ public class BuilderObjectUI : MonoBehaviour {
         Select(false);
     }
 
+    //set the color of the border image based on value
     public void Select(bool val)
     {
-        Debug.Log("Selecting: " + itemName.text + " " + val);
         if (borderImg == null) return;
         if (val)
         {

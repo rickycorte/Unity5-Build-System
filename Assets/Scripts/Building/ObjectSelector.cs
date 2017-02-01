@@ -64,6 +64,7 @@ public class ObjectSelector : MonoBehaviour {
         GetComponent<ObjectPlacer>().Enable(isActive);
     }
 
+    //toggle object selector and oobject placer
     public void Toggle()
     {
         isOpen = !isOpen;
@@ -71,6 +72,7 @@ public class ObjectSelector : MonoBehaviour {
         objPlacer.Toggle(isOpen);
     }
 
+    //toggle object selector and oobject placer based on value
     public void Toggle(bool val)
     {
         isOpen = val;
@@ -107,7 +109,7 @@ public class ObjectSelector : MonoBehaviour {
     * UI Control
     * *************************************************/
 
-    //controlla dove e' il puntatore
+    //check if the mouse is over ui or not
     void isOnUI()
     {
         objPlacer.SetIsMouseNotOnUI(
@@ -116,7 +118,7 @@ public class ObjectSelector : MonoBehaviour {
 
     }
 
-    //attiva o meno l'ui assegnata da inspector
+    //toggle object selection ui
     void ToggleUI()
     {
         if (builderUI != null)
@@ -126,7 +128,7 @@ public class ObjectSelector : MonoBehaviour {
         else Debug.LogError("Missing UI for ObjectSelector!");
     }
 
-    //attiva o meno l'ui assegnata da inspector
+    //toggle object slection ui based on a value
     void ToggleUI(bool val)
     {
         if (builderUI != null)
@@ -140,7 +142,7 @@ public class ObjectSelector : MonoBehaviour {
     * GObject Placer Setup
     * *************************************************/
 
-    //callback dell ui per impostare l 'item
+    //ui callback to set the desired item in object placer
     public void UseItem(int index)
     {
         if (index >= 0  && index < objContainer.items.Count)

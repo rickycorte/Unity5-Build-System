@@ -35,6 +35,10 @@ public class BuilderUI : MonoBehaviour {
 
     BuilderObjectUI selectedObject;
 
+    GridLayoutGroup grid;
+
+    int columns = 5;
+
     /****************************************************
     * initialization
     * *************************************************/
@@ -49,18 +53,34 @@ public class BuilderUI : MonoBehaviour {
 
         if (objPrefab == null) Debug.LogError("Missing objPrefab, please assign it!");
         if (ButtonsParent == null) Debug.LogError("Missing ButtonsParent, please assign it!");
+
+        grid = ButtonsParent.GetComponent<GridLayoutGroup>();
+        SetUpGrid();
+        
+    }
+
+    void SetUpGrid()
+    {
+        if (grid == null) return;
+
+        Vector2 dim = GetComponent<RectTransform>().sizeDelta; // get menu size
+        float x = dim.x - grid.spacing.x * columns - grid.padding.right - grid.padding.left; // remove margins and padding
+        float size = x / columns;
+        Debug.Log("Canvas is: " + dim.x + " available: " + x + " cell size: " + size);
+        grid.cellSize = new Vector2(size, size);
     }
 
     /****************************************************
     * Activation
     * *************************************************/
 
-    //apri/chiudi il menu
+    //toggle menu
     public void ToggleMenu()
     {
         ToggleMenu(!cv.blocksRaycasts);
     }
 
+    //toggle menu with a value
     public void ToggleMenu(bool val)
     {
         anim.SetBool("isOpen", val);
@@ -75,7 +95,7 @@ public class BuilderUI : MonoBehaviour {
     * Extrernal Actions
     * *************************************************/
 
-    //collape the menu but not toggle it so ic can be reopened
+    //collapse the menu but not toggle it so ic can be reopened
     public void CollapseMenu()
     {
         isMenuCollapsed = !isMenuCollapsed;
@@ -97,7 +117,7 @@ public class BuilderUI : MonoBehaviour {
     * UI generation
     * *************************************************/
 
-    //crea tutti i bottoni per selezionare i vari oggetti
+    //create the buttons for all the elements
     public void Populatemenu(ScriptableObjectContainer container, ObjectSelector selector)
     {
         for (int i = 0; i < container.items.Count; i++)
