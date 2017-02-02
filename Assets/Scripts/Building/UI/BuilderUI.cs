@@ -59,6 +59,7 @@ public class BuilderUI : MonoBehaviour {
         
     }
 
+    //set the grid item size to best fit the ui
     void SetUpGrid()
     {
         if (grid == null) return;
@@ -66,7 +67,7 @@ public class BuilderUI : MonoBehaviour {
         Vector2 dim = GetComponent<RectTransform>().sizeDelta; // get menu size
         float x = dim.x - grid.spacing.x * columns - grid.padding.right - grid.padding.left; // remove margins and padding
         float size = x / columns;
-        Debug.Log("Canvas is: " + dim.x + " available: " + x + " cell size: " + size);
+        //Debug.Log("Canvas is: " + dim.x + " available: " + x + " cell size: " + size);
         grid.cellSize = new Vector2(size, size);
     }
 
@@ -123,6 +124,11 @@ public class BuilderUI : MonoBehaviour {
         for (int i = 0; i < container.items.Count; i++)
         {
             var item = Instantiate(objPrefab,ButtonsParent).GetComponent<BuilderObjectUI>();
+            //reset postion and scale of the instantiated item
+            RectTransform rt = item.GetComponent<RectTransform>();
+            rt.localScale = Vector3.one;
+            rt.localPosition = Vector3.zero; 
+            //setup content
             item.SetUp(container.items[i]);
             item.AddButtonListner(selector.UseItem, i);
 
