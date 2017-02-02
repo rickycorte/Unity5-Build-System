@@ -47,15 +47,16 @@ public class PlayerController : MonoBehaviour {
         if (cam != null)
         {
             float x = cam.rotation.eulerAngles.x;
-            if (x >= 360 - camAngle-1 || x <= camAngle+1) // aggiungi +1 per evitare che 30.0000000001 o cose simili blocchino la telecamera
+            if (x >= 360 - camAngle - 1 || x <= camAngle + 1) // aggiungi +1 per evitare che 30.0000000001 o cose simili blocchino la telecamera
             {
                 x += vertRot;
                 //blocca rotazione della camera
                 if (x > camAngle && x <= 180) x = camAngle;
                 if (x < 360 - camAngle && x > 180) x = 360 - camAngle;
 
-                cam.rotation = Quaternion.Euler(x,cam.rotation.eulerAngles.y, 0);
+                cam.rotation = Quaternion.Euler(x, cam.rotation.eulerAngles.y, 0);
             }
+            else cam.rotation = Quaternion.identity;
         }
 
 	}
