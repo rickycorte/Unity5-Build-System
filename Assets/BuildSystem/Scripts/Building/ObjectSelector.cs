@@ -56,7 +56,7 @@ namespace BuildSystem
             builderUI = Instantiate(BuilderMenuPrefab).GetComponentInChildren<BuilderUI>();
             builderUI.Populatemenu(objContainer, this);
 
-            objPlacer.SetObjectToPlaceNOGHOST(objContainer.items[0].Prefab); // imposta come oggetto di default il primo
+            objPlacer.SetObjectToPlaceNOGHOST(objContainer.items[0]); // imposta come oggetto di default il primo
         }
 
         /****************************************************
@@ -154,7 +154,7 @@ namespace BuildSystem
         {
             if (index >= 0 && index < objContainer.items.Count)
             {
-                objPlacer.SetObjectToPlace(objContainer.items[index].Prefab);
+                objPlacer.SetObjectToPlace(objContainer.items[index]);
             }
             else Debug.LogError("No item for index: " + index);
         }

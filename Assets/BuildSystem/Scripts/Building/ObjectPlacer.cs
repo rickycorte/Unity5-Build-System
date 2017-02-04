@@ -95,6 +95,10 @@ namespace BuildSystem
 
         Vector3 pivotOffsetExtra;
 
+        bool useCompleMesh = false;
+
+        UnityEngine.Rendering.ShadowCastingMode oldShadowState;
+
 
         /****************************************************
         * Components & references
@@ -105,6 +109,8 @@ namespace BuildSystem
 
         Material[] oldMaterials;
         Transform myTransform;
+
+        ComplexGhostCreator complexGhost;
 
         /****************************************************
         * Init
@@ -211,8 +217,10 @@ namespace BuildSystem
             {
                 ghostRenderer = renderer;
                 EnableGhostMaterials();
-                ghostRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // remove shadows
+                EnableShadows(false);
             }
+
+            if (useCompleMesh) complexGhost.CreateComplexGhost(ghostObjInstance, ghostMaterial);
 
             //remove collisions and physics
             EnableGhostObjCollision(false);
@@ -263,15 +271,18 @@ namespace BuildSystem
         {
             if (ghostObjInstance != null)
             {
+                if (useCompleMesh) complexGhost.RemoveComplexGhost();
                 ghostRenderer.materials = oldMaterials; //reset material with the old one
+
                 EnableGhostObjRigidbodies(true); //reset rigidbody state
                 EnableGhostObjCollision(true); //reset collisions
-                ghostRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On; // enable shadows
+                EnableShadows(true);
                 Debug.Log("Created: " + ghostObjInstance.name);
+
                 if (usingFakePivot)
                 {
                     ghostObjInstance.GetComponent<PivotHelper>().DeletePivot();
-                }
+                }               
 
                 ghostObjInstance = null; //leave the object in the scene
 
@@ -361,6 +372,21 @@ namespace BuildSystem
         * Ghost Object properties modifiers
         * *************************************************/
 
+        //active/reset shadow preset of renderer
+        void EnableShadows(bool val)
+        {
+            if (!val)
+            {
+                oldShadowState = ghostRenderer.shadowCastingMode;
+                ghostRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            else
+            {
+                ghostRenderer.shadowCastingMode = oldShadowState;
+            }
+
+        }
+
         //toggle ghost colliders
         void EnableGhostObjCollision(bool val)
         {
@@ -437,17 +463,23 @@ namespace BuildSystem
         * *************************************************/
 
         //Set the prefab to spawn and create its ghost
-        public void SetObjectToPlace(GameObject prefab)
+        public void SetObjectToPlace(ScriptableObjectToPlace item)
         {
-            objectToPlace = prefab;
+            SetObjectToPlaceNOGHOST(item);
             CreateGhostObject();
         }
 
 
         //set the prefab to spawn, NO GHOST is created
-        public void SetObjectToPlaceNOGHOST(GameObject prefab)
+        public void SetObjectToPlaceNOGHOST(ScriptableObjectToPlace item)
         {
-            objectToPlace = prefab;
+            objectToPlace = item.Prefab;
+            useCompleMesh = item.isComplexMesh;
+            if (useCompleMesh)
+            {
+                if(complexGhost == null)
+                   complexGhost = gameObject.AddComponent<ComplexGhostCreator>();
+            }
         }
 
         //set if the mouse is over a ui element and this script should not place and object
