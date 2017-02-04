@@ -8,23 +8,36 @@ namespace BuildSystem
     public class ComplexGhostCreator : MonoBehaviour
     {
 
+        /****************************************************
+        * Variables
+        * *************************************************/
+
         List<Material[]> oldMats = new List<Material[]>();
 
         MeshRenderer[] renders;
 
-        //applica il ghost a un oggetto composto da piu renderer
+        UnityEngine.Rendering.ShadowCastingMode[] oldShadows;
+
+
+        /****************************************************
+        * GhostCreation
+        * *************************************************/
+
+        //create a complex ghost (more meshes)
         public void CreateComplexGhost(Transform objRoot, Material ghostMat)
         {
             if (objRoot == null || ghostMat == null) return;
 
-            renders = objRoot.GetComponentsInChildren<MeshRenderer>(); // recupera tutti i renderer
+            renders = objRoot.GetComponentsInChildren<MeshRenderer>(); // get all renderers
+            oldShadows = new UnityEngine.Rendering.ShadowCastingMode[renders.Length];
             for (int i = 0; i < renders.Length; i++)
             {
-                Material[] mats = renders[i].materials; // recupra i vecchi materiali
-                oldMats.Add(mats); // salva i vecchi materiali
-                renders[i].materials = ghostMatArray(mats.Length, ghostMat); // imposta i nuovi materiali da ghost
+                Material[] mats = renders[i].materials; // get current material
+                oldMats.Add(mats); // seve them
+                renders[i].materials = ghostMatArray(mats.Length, ghostMat); // replace materials with ghost
 
-                renders[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                oldShadows[i] = renders[i].shadowCastingMode; //recover old shadows
+                renders[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // remove shadows
             }
 
             Debug.Log("Created complex ghost");
@@ -32,7 +45,7 @@ namespace BuildSystem
         }
 
 
-        //crea un array di materiali ghost da usare su un oggetto
+        //create an array of ghost materials
         Material[] ghostMatArray(int size, Material ghostMaterial)
         {
             Material[] ghosts = new Material[size];
@@ -44,14 +57,14 @@ namespace BuildSystem
             return ghosts;
         }
 
-        //riapplica i materiali all'oggetto. NOTA: l'oggetto deve essere il medesimo passato alla funzione CreateComplexGhost
+        //reapply old materials to the renderes cached after create
         public void RemoveComplexGhost()
         {
             if (renders == null) return;
             for (int i = 0; i < renders.Length; i++)
             {
-                renders[i].materials = oldMats[i]; // applica i vecchi materiali
-                renders[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renders[i].materials = oldMats[i]; // apply old material
+                renders[i].shadowCastingMode = oldShadows[i]; // apply old shadows
             }
             oldMats.Clear();
 
