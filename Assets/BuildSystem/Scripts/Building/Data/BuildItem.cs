@@ -27,7 +27,7 @@ namespace BuildSystem
             {
                 Debug.LogError("item: " + i.name + " has null Prefab!");
                 return false;
-            }      
+            }
 
             return true;
         }

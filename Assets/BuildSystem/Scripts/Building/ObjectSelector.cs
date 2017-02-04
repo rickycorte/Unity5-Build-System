@@ -163,7 +163,7 @@ namespace BuildSystem
         {
             if (index >= 0 && index < buildObjectList.items.Count)
             {
-                objPlacer.SetObjectToPlace(buildObjectList.items[index]);
+                objPlacer.SetObjectToPlaceAndCreateGhost(buildObjectList.items[index]);
             }
             else Debug.LogError("No item for index: " + index);
         }

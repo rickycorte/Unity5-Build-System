@@ -215,7 +215,8 @@ namespace BuildSystem
 
             if (ghostRenderer == null)
             {
-                Debug.Log("Object: " + objectToPlace + " has no mesh renderers! Aborting ghost creation.");
+                Debug.LogError("Object: " + objectToPlace + " has no mesh renderers! Aborting ghost creation.");
+                Destroy(ghostObjInstance);
                 return;
             }
 
@@ -528,7 +529,7 @@ namespace BuildSystem
         }
 
         //Set the prefab to spawn and create its ghost
-        public void SetObjectToPlaceAndCreteGhost(BuildItem item)
+        public void SetObjectToPlaceAndCreateGhost(BuildItem item)
         {
             if (item == null || !BuildItem.isValid(item))
             {
