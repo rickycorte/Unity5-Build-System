@@ -14,36 +14,67 @@ namespace BuildSystem
 
         List<Material[]> oldMats = new List<Material[]>();
 
-        MeshRenderer[] renders;
+        MeshRenderer[] meshRenderers;
 
         UnityEngine.Rendering.ShadowCastingMode[] oldShadows;
 
 
         /****************************************************
-        * GhostCreation
+        * Ghost Creation/Destruction
         * *************************************************/
 
         //create a complex ghost (more meshes)
         public void CreateComplexGhost(Transform objRoot, Material ghostMat)
         {
-            if (objRoot == null || ghostMat == null) return;
-
-            renders = objRoot.GetComponentsInChildren<MeshRenderer>(); // get all renderers
-            oldShadows = new UnityEngine.Rendering.ShadowCastingMode[renders.Length];
-            for (int i = 0; i < renders.Length; i++)
+            if (objRoot == null || ghostMat == null)
             {
-                Material[] mats = renders[i].materials; // get current material
-                oldMats.Add(mats); // seve them
-                renders[i].materials = ghostMatArray(mats.Length, ghostMat); // replace materials with ghost
-
-                oldShadows[i] = renders[i].shadowCastingMode; //recover old shadows
-                renders[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // remove shadows
+                Debug.LogError("CreateComplexGhost can't have null paramteres! Aborting creation.");
+                return;
             }
 
-            Debug.Log("Created complex ghost");
+            meshRenderers = objRoot.GetComponentsInChildren<MeshRenderer>(); // get all renderers
+            //renders will be keep as a cache to avoid multiple getComponents
+            oldShadows = new UnityEngine.Rendering.ShadowCastingMode[meshRenderers.Length]; // create an array to store shadow settings
 
+            for (int i = 0; i < meshRenderers.Length; i++)
+            {
+                Material[] mats = meshRenderers[i].materials; // get current material
+                oldMats.Add(mats); //save them
+                meshRenderers[i].materials = ghostMatArray(mats.Length, ghostMat); // replace materials with ghost
+
+                oldShadows[i] = meshRenderers[i].shadowCastingMode; //recover old shadows
+                meshRenderers[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // remove shadows
+            }
+
+           // Debug.Log("Created complex ghost");
         }
 
+
+        //reapply old materials to the renderes cached after create
+        public void RemoveComplexGhost()
+        {
+            if (meshRenderers == null) return;
+
+            for (int i = 0; i < meshRenderers.Length; i++)
+            {
+                meshRenderers[i].materials = oldMats[i]; // apply old material
+                meshRenderers[i].shadowCastingMode = oldShadows[i]; // apply old shadows
+            }
+            ClearCache();
+
+            //Debug.Log("Removed complex ghost");
+        }
+
+        //clear chached values
+        public void ClearCache()
+        {           
+            oldMats.Clear();
+            oldShadows = null;
+        }
+
+        /****************************************************
+        * Helpers
+        * *************************************************/
 
         //create an array of ghost materials
         Material[] ghostMatArray(int size, Material ghostMaterial)
@@ -55,20 +86,6 @@ namespace BuildSystem
             }
 
             return ghosts;
-        }
-
-        //reapply old materials to the renderes cached after create
-        public void RemoveComplexGhost()
-        {
-            if (renders == null) return;
-            for (int i = 0; i < renders.Length; i++)
-            {
-                renders[i].materials = oldMats[i]; // apply old material
-                renders[i].shadowCastingMode = oldShadows[i]; // apply old shadows
-            }
-            oldMats.Clear();
-
-            Debug.Log("Removed complex ghost");
         }
 
     }

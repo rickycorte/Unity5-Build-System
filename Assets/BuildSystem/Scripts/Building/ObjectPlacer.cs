@@ -12,59 +12,52 @@ namespace BuildSystem
         * Editor Interface
         * *************************************************/
 
-        [Header("Objects Settings")]
+        [Header("Object Settings")]
 
         [Tooltip("Fill this only if you don't use ObjectSelector!")]
-        [SerializeField]
-        GameObject objectToPlace;
+        [SerializeField] GameObject objectToPlace;
 
         [Tooltip("This material will be applied to the object when it is not placed!")]
-        [SerializeField]
-        Material ghostMaterial;
+        [SerializeField] Material ghostMaterial;
 
-        [Header("Place Settings")] // -------------------------------------------------
+        //**********************************************************************************************
+        [Header("Place Settings")]
 
         [Tooltip("Camera used to raycast and find place position, if empty the script will try to use the main camera")]
-        [SerializeField]
-        Camera cam;
+        [SerializeField] Camera cam;
 
         [Tooltip("Layers that this script will use to get hit points to place objects")]
-        [SerializeField]
-        LayerMask GroundLayer;
+        [SerializeField] LayerMask GroundLayer;
 
-        [SerializeField]
-        float maxPlaceDistance = 10f;
+        [SerializeField] float maxPlaceDistance = 10f;
 
-        [SerializeField]
-        bool placeInScreenCenter = false;
+        [SerializeField] bool placeInScreenCenter = false;
+
+        //**********************************************************************************************
+        [Header("Rotation Settings")]
 
         [Tooltip("Face the object to the player, THIS BLOCKS SNAP ROTAION!")]
-        [SerializeField]
-        bool faceMe = false;
+        [SerializeField] bool faceMe = false;
 
-        [SerializeField]
-        float snapRotationAngle = 45;
+        [SerializeField] float snapRotationAngle = 45;
 
-        [Header("Input Settings")] // -------------------------------------------------
+        //**********************************************************************************************
+        [Header("Input Settings")] 
 
         [Tooltip("Key to press to enable the builder mode. This is also used by ObjectSelector")]
-        [SerializeField]
-        KeyCode toggleKey = KeyCode.E;
+        [SerializeField] KeyCode toggleKey = KeyCode.E;
 
         [Tooltip("Key to press to place a item in the scene")]
-        [SerializeField]
-        KeyCode placeKey = KeyCode.Mouse0;
+        [SerializeField] KeyCode placeKey = KeyCode.Mouse0;
 
         [Tooltip("Key to press rotate (forward) the object based on snapRotaionDeg")]
-        [SerializeField]
-        KeyCode positiveRotateKey = KeyCode.Mouse1;
+        [SerializeField] KeyCode positiveRotateKey = KeyCode.Mouse1;
 
         [Tooltip("Key to press rotate (backward) the object based on snapRotaionDeg")]
-        [SerializeField]
-        KeyCode negativeRotateKey = KeyCode.None;
+        [SerializeField] KeyCode negativeRotateKey = KeyCode.None;
 
         /****************************************************
-        * Public variables
+        * Public variables & Classes
         * *************************************************/
         public enum PlaceMode { mousePos, screenCenter };
 
@@ -83,21 +76,22 @@ namespace BuildSystem
 
         bool canPlace = false;
 
-        float pivotMargin = .1f;
-
         bool mouseIsNotOnUI = false;
 
-        bool usingFakePivot = false;
-
-        bool[] bodiesPrevState;
-
+        //object rotation
         float objectSnapCurrentRotaion = 0;
 
+        //object pivot
+        float pivotMargin;
+        bool usingFakePivot = false;
         Vector3 pivotOffsetExtra;
 
-        bool useCompleMesh = false;
-
+        //old prefab state
+        bool[] bodiesPrevState;
         UnityEngine.Rendering.ShadowCastingMode oldShadowState;
+
+        //Mesh Type
+        bool useCompleMesh = false;
 
 
         /****************************************************
@@ -110,7 +104,7 @@ namespace BuildSystem
         Material[] oldMaterials;
         Transform myTransform;
 
-        ComplexGhostCreator complexGhost;
+        ComplexGhostCreator complexGhostCreator;
 
         /****************************************************
         * Init
@@ -164,12 +158,12 @@ namespace BuildSystem
 
         private void FixedUpdate()
         {
-            if (canPlace)
+            if (canPlace && ghostObjInstance != null)
             {
                 MoveGhostObject();
                 if (faceMe)
                 {
-                    RotateGhostToFaceMe();
+                    snapRotationAngle =  GetFaceToRotation(myTransform, ghostObjInstance);
                 }
             }
         }
@@ -181,8 +175,7 @@ namespace BuildSystem
         public void Toggle()
         {
             canPlace = !canPlace;
-            if (canPlace) CreateGhostObject();
-            else DestroyGhostObject();
+            Toggle(canPlace);
         }
 
 
@@ -209,32 +202,49 @@ namespace BuildSystem
         void CreateGhostObject()
         {
             DestroyGhostObject();
+
+            if (objectToPlace == null)
+            {
+                Debug.LogError("No prefab to instantiate! Aborting ghost creation.");
+                return;
+            }
             ghostObjInstance = Instantiate(objectToPlace, myTransform.position, Quaternion.identity).GetComponent<Transform>();
 
-            //set ghost obj material
-            var renderer = ghostObjInstance.GetComponentInChildren<MeshRenderer>();
-            if (renderer != null)
+            //get the root renderer (first one is considered root)
+            ghostRenderer = ghostObjInstance.GetComponentInChildren<MeshRenderer>();
+
+            if (ghostRenderer == null)
             {
-                ghostRenderer = renderer;
-                EnableGhostMaterials();
-                EnableShadows(false);
+                Debug.Log("Object: " + objectToPlace + " has no mesh renderers! Aborting ghost creation.");
+                return;
             }
 
-            if (useCompleMesh) complexGhost.CreateComplexGhost(ghostObjInstance, ghostMaterial);
+            EnableGhostMaterials(ghostRenderer);
+
+            //replace materials with ghost
+            EnableGhostShadows(false);
+            if (useCompleMesh)
+                complexGhostCreator.CreateComplexGhost(ghostObjInstance, ghostMaterial);
 
             //remove collisions and physics
-            EnableGhostObjCollision(false);
+            EnableObjectCollision(ghostObjInstance,false);
             EnableGhostObjRigidbodies(false);
 
             //reset old object rotation
             objectSnapCurrentRotaion = 0;
 
-            //check where is the pivot, if is not in the base create a fake one
+            //check where is the pivot, if it is not in the base create a fake one
             usingFakePivot = false;
             pivotMargin = ghostRenderer.bounds.extents.y * 2 / 3; //set the base pivot margin. its' height must be lower than obj center * 2/3
-            bool objPivotIsBase = CheckIfObjectPivotIsCenter();
-            //Debug.Log("Pivot is base: " + objPivotIsBase);
-            if (!objPivotIsBase) CreateBasePivot();
+
+            bool objPivotIsBase = CheckIfObjectPivotIsCenter(ghostObjInstance,ghostRenderer, out pivotOffsetExtra);
+
+            //create a fake pivot if the real one is not in base
+            if (!objPivotIsBase)
+            {
+                ghostObjInstance = CreateBasePivot(ghostObjInstance, ghostRenderer,pivotOffsetExtra);
+                usingFakePivot = true;
+            }
         }
 
 
@@ -244,6 +254,7 @@ namespace BuildSystem
             RaycastHit hit;
 
             Ray r;
+            //Create a ray for the raycast
             if (!placeInScreenCenter)
             {
                 //use mouse pointer to place object
@@ -259,9 +270,11 @@ namespace BuildSystem
             //find hit position and move there the object
             if (Physics.Raycast(r, out hit, maxPlaceDistance, GroundLayer))
             {
+                //set object position to hit point
                 Vector3 pos = hit.point;
                 ghostObjInstance.position = pos;
-                AlignGhostToSurface(hit.normal);
+
+                AlignGhostToSurface(ghostObjInstance,hit.normal);
             }
         }
 
@@ -271,15 +284,17 @@ namespace BuildSystem
         {
             if (ghostObjInstance != null)
             {
-                if (useCompleMesh) complexGhost.RemoveComplexGhost();
-                ghostRenderer.materials = oldMaterials; //reset material with the old one
+                //reset old materials
+                if (useCompleMesh) complexGhostCreator.RemoveComplexGhost();
+                EnableGhostMaterials(false);
 
                 EnableGhostObjRigidbodies(true); //reset rigidbody state
-                EnableGhostObjCollision(true); //reset collisions
-                EnableShadows(true);
+                EnableObjectCollision(ghostObjInstance, true); //reset collisions
+                EnableGhostShadows(true); //reset old shadow state
+
                 Debug.Log("Created: " + ghostObjInstance.name);
 
-                if (usingFakePivot)
+                if (usingFakePivot) // remove fake pivot if using one
                 {
                     ghostObjInstance.GetComponent<PivotHelper>().DeletePivot();
                 }               
@@ -295,7 +310,11 @@ namespace BuildSystem
         //remove ghost object from scene
         void DestroyGhostObject()
         {
-            if (ghostObjInstance != null) Destroy(ghostObjInstance.gameObject);
+            if (ghostObjInstance != null)
+            {
+                Destroy(ghostObjInstance.gameObject);
+                if (complexGhostCreator != null) complexGhostCreator.ClearCache();
+            }
         }
 
 
@@ -304,62 +323,74 @@ namespace BuildSystem
         * *************************************************/
 
         //align ghost object to surface based on raycast hit normal
-        void AlignGhostToSurface(Vector3 hitNormal)
+        void AlignGhostToSurface(Transform itemToAlign,Vector3 hitNormal)
         {
-            if (ghostObjInstance == null) return;
+            if (itemToAlign == null) return;
 
-            ghostObjInstance.rotation = Quaternion.FromToRotation(Vector3.up, hitNormal) * Quaternion.Euler(new Vector3(0, objectSnapCurrentRotaion, 0));
+            itemToAlign.rotation = Quaternion.FromToRotation(Vector3.up, hitNormal) * Quaternion.Euler(new Vector3(0, objectSnapCurrentRotaion, 0));
 
         }
 
         //check if the object pivot is in center or not
-        bool CheckIfObjectPivotIsCenter()
+        //this function returns the pivot Offset (can be Vector3.zero)
+        bool CheckIfObjectPivotIsCenter(Transform item, MeshRenderer renderer, out Vector3 pivotOffset)
         {
-            if (ghostRenderer == null)
+            if (renderer == null)
             {
-                Debug.LogError("NO GHOST RENDER FOUND!");
+                Debug.LogError("No ghost renderer!");
+                pivotOffset = Vector3.zero;
                 return false;
             }
 
-            Vector3 delta = ghostObjInstance.position - ghostRenderer.bounds.center;
+            Vector3 delta = item.position - renderer.bounds.center;
             if (delta.magnitude >= pivotMargin && delta.y < 0) //delta.y < 0 fix issues that not centerd pivots above the object center were taken as base pivots
             {
-                pivotOffsetExtra = Vector3.zero;
+                pivotOffset = Vector3.zero;
                 return true;
             }
             else
             {
-                pivotOffsetExtra = delta; // save pivot delta to use to create a fake pivot
+                pivotOffset = delta; // save pivot delta to use to create a fake pivot
                 return false;
             }
         }
 
         //create a pivot parent to better place the object
-        void CreateBasePivot()
+        Transform CreateBasePivot(Transform item,MeshRenderer renderer, Vector3 pivotOffset)
         {
+            if (item == null || renderer == null)
+            {
+                Debug.LogError("CreateBasePivot can't have null parameters!");
+            }
+
             GameObject pivotG = new GameObject("Temp_Ghost_Pivot_Parent"); // create parent
-            pivotG.AddComponent<PivotHelper>(); // add helper class to remove the pivot
-
-            //recover mesh center
-            Vector3 meshCenter = ghostRenderer.bounds.extents;
-            meshCenter.x = pivotOffsetExtra.x;
-            meshCenter.z = pivotOffsetExtra.z;
-            meshCenter.y += pivotOffsetExtra.y; // apply pivot delta
-
             Transform pivotT = pivotG.transform;
-            ghostObjInstance.SetParent(pivotT); // set the current object as child 
-            ghostObjInstance.localPosition = meshCenter; // move the object up to make the parent the base pivot
 
-            ghostObjInstance = pivotT; // replace old object reference with the parent
-            usingFakePivot = true; //remember that we created a fake pivot
+            pivotG.AddComponent<PivotHelper>(); // add helper class to remove the pivot when object is spawned
+
+            //get mesh center
+            Vector3 meshCenter = renderer.bounds.extents;
+            // apply pivot delta
+            meshCenter.x = pivotOffset.x;
+            meshCenter.z = pivotOffset.z;
+            meshCenter.y += pivotOffset.y; 
+
+
+            item.SetParent(pivotT); // set the current object as parent
+            item.localPosition = meshCenter; // move the object and leave the parent object in the pivot position
+
+            return pivotT;
         }
 
 
         //rotate ghost object to face the placer
-        void RotateGhostToFaceMe()
+        float GetFaceToRotation(Transform target,Transform other)
         {
-            Vector3 dir = myTransform.position - ghostObjInstance.position;
-            objectSnapCurrentRotaion = Quaternion.LookRotation(dir.normalized).eulerAngles.y;
+            if (objectToPlace == null || ghostRenderer)
+                Debug.LogError("GetFaceToRotaion can't have null parameters");
+
+            Vector3 dir = target.position - other.position;
+            return Quaternion.LookRotation(dir.normalized).eulerAngles.y;
         }
 
         //snap rotation of the object
@@ -373,7 +404,7 @@ namespace BuildSystem
         * *************************************************/
 
         //active/reset shadow preset of renderer
-        void EnableShadows(bool val)
+        void EnableGhostShadows(bool val)
         {
             if (!val)
             {
@@ -388,9 +419,11 @@ namespace BuildSystem
         }
 
         //toggle ghost colliders
-        void EnableGhostObjCollision(bool val)
+        void EnableObjectCollision(Transform item ,bool val)
         {
-            var cols = ghostObjInstance.GetComponentsInChildren<Collider>();
+            if (item == null) return;
+
+            var cols = item.GetComponentsInChildren<Collider>();
             for (int i = 0; i < cols.Length; i++)
             {
                 cols[i].enabled = val;
@@ -437,13 +470,20 @@ namespace BuildSystem
         }
 
 
-        //set all materials to ghost
-        void EnableGhostMaterials()
+        //set all materials to ghost and store the old ones
+        void EnableGhostMaterials(bool val)
         {
             if (ghostRenderer == null) return;
-            oldMaterials = ghostRenderer.materials;
 
-            ghostRenderer.materials = CreateGhostMaterialArray(ghostRenderer.materials.Length);
+            if (val)
+            {
+                oldMaterials = ghostRenderer.materials;
+                ghostRenderer.materials = CreateGhostMaterialArray(ghostRenderer.materials.Length);
+            }
+            else
+            {
+                ghostRenderer.materials = oldMaterials;
+            }
         }
 
         //create a list of ghost materials to apply
@@ -459,28 +499,78 @@ namespace BuildSystem
 
 
         /****************************************************
-        * External Setup
+        * External Prafab Setup
         * *************************************************/
 
-        //Set the prefab to spawn and create its ghost
+        //add complex mesh handler if it's required
+        void AddComplexGhostGenerator()
+        {
+            if (useCompleMesh)
+            {
+                if (complexGhostCreator == null)
+                    complexGhostCreator = gameObject.AddComponent<ComplexGhostCreator>();
+            }
+        }
+
+        //set the prefab to spawn, NO GHOST is created
         public void SetObjectToPlace(BuildItem item)
         {
-            SetObjectToPlaceNOGHOST(item);
+            if (item == null || !BuildItem.isValid(item))
+            {
+                Debug.LogError("Invalid item!");
+                return;
+            }
+
+            objectToPlace = item.Prefab;
+            useCompleMesh = item.isComplexMesh;
+
+            AddComplexGhostGenerator();
+        }
+
+        //Set the prefab to spawn and create its ghost
+        public void SetObjectToPlaceAndCreteGhost(BuildItem item)
+        {
+            if (item == null || !BuildItem.isValid(item))
+            {
+                
+                Debug.LogError("invalid Item!");
+                return;
+            }
+            SetObjectToPlace(item);
             CreateGhostObject();
         }
 
 
-        //set the prefab to spawn, NO GHOST is created
-        public void SetObjectToPlaceNOGHOST(BuildItem item)
+        //set a object to place without using ScriptableObjects
+        public void SetObjcetToPlace(GameObject prefab, bool isComplexMesh = false)
         {
-            objectToPlace = item.Prefab;
-            useCompleMesh = item.isComplexMesh;
-            if (useCompleMesh)
+            if (prefab == null)
             {
-                if(complexGhost == null)
-                   complexGhost = gameObject.AddComponent<ComplexGhostCreator>();
+                Debug.LogError("Null prefab!");
+                return;
             }
+            objectToPlace = prefab;
+            useCompleMesh = isComplexMesh;
+
+            AddComplexGhostGenerator();
         }
+
+        //set a object to place without using ScriptableObjects, and then crete its ghost
+        public void SetObjectToPlaceAndCreateGhost(GameObject prefab, bool isComplexMesh = false)
+        {
+            if (prefab == null)
+            {
+                Debug.LogError("Null prefab!");
+                return;
+            }
+            SetObjcetToPlace(prefab, isComplexMesh);
+            CreateGhostObject();
+        }
+
+
+        /****************************************************
+        * External Setup Misc
+        * *************************************************/
 
         //set if the mouse is over a ui element and this script should not place and object
         public void SetIsMouseNotOnUI(bool value)

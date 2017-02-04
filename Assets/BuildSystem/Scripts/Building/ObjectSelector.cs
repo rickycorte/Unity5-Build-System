@@ -17,7 +17,7 @@ namespace BuildSystem
 
         [Tooltip("List of spawnable objects")]
         [SerializeField]
-        BuildItemContainer objContainer;
+        BuildItemContainer buildObjectList;
 
         [Header("UI")]
 
@@ -52,11 +52,20 @@ namespace BuildSystem
         {
             objPlacer = GetComponent<ObjectPlacer>();
             activeKey = objPlacer.TOGGLEKEY;
-            if (BuilderMenuPrefab == null) Debug.LogError("Missing BuilderMenuPrefab, please assign it!");
+            if (BuilderMenuPrefab == null)
+            {
+                Debug.LogError("Missing BuilderMenuPrefab, please assign it!");
+                return;
+            }
+            if (buildObjectList == null)
+            {
+                Debug.LogError("Missing buildObjectList, please assign it!");
+                return;
+            }
             builderUI = Instantiate(BuilderMenuPrefab).GetComponentInChildren<BuilderUI>();
-            builderUI.Populatemenu(objContainer, this);
+            builderUI.Populatemenu(buildObjectList, this);
 
-            objPlacer.SetObjectToPlaceNOGHOST(objContainer.items[0]); // imposta come oggetto di default il primo
+            objPlacer.SetObjectToPlace(buildObjectList.items[0]); // imposta come oggetto di default il primo
         }
 
         /****************************************************
@@ -152,9 +161,9 @@ namespace BuildSystem
         //ui callback to set the desired item in object placer
         public void UseItem(int index)
         {
-            if (index >= 0 && index < objContainer.items.Count)
+            if (index >= 0 && index < buildObjectList.items.Count)
             {
-                objPlacer.SetObjectToPlace(objContainer.items[index]);
+                objPlacer.SetObjectToPlace(buildObjectList.items[index]);
             }
             else Debug.LogError("No item for index: " + index);
         }

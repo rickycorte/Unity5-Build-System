@@ -128,6 +128,7 @@ namespace BuildSystem
         //create the buttons for all the elements
         public void Populatemenu(BuildItemContainer container, ObjectSelector selector)
         {
+
             for (int i = 0; i < container.items.Count; i++)
             {
                 var item = Instantiate(objPrefab, ButtonsParent).GetComponent<BuilderObjectUI>();
