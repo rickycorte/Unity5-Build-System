@@ -17,7 +17,7 @@ namespace BuildSystem
 
         [Tooltip("List of spawnable objects")]
         [SerializeField]
-        ScriptableObjectContainer objContainer;
+        BuildItemContainer objContainer;
 
         [Header("UI")]
 

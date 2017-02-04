@@ -463,7 +463,7 @@ namespace BuildSystem
         * *************************************************/
 
         //Set the prefab to spawn and create its ghost
-        public void SetObjectToPlace(ScriptableObjectToPlace item)
+        public void SetObjectToPlace(BuildItem item)
         {
             SetObjectToPlaceNOGHOST(item);
             CreateGhostObject();
@@ -471,7 +471,7 @@ namespace BuildSystem
 
 
         //set the prefab to spawn, NO GHOST is created
-        public void SetObjectToPlaceNOGHOST(ScriptableObjectToPlace item)
+        public void SetObjectToPlaceNOGHOST(BuildItem item)
         {
             objectToPlace = item.Prefab;
             useCompleMesh = item.isComplexMesh;

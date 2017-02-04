@@ -71,8 +71,8 @@ namespace BuildSystem
         {
             if (grid == null) return;
 
-            Vector2 dim = GetComponent<RectTransform>().sizeDelta; // get menu size
-            float x = dim.x - grid.spacing.x * columns - grid.padding.right - grid.padding.left; // remove margins and padding
+            Vector2 dim = GetComponent<RectTransform>().sizeDelta; //get menu size
+            float x = dim.x - grid.spacing.x * columns - grid.padding.right - grid.padding.left; //remove margins and padding
             float size = x / columns;
             //Debug.Log("Canvas is: " + dim.x + " available: " + x + " cell size: " + size);
             grid.cellSize = new Vector2(size, size);
@@ -126,12 +126,12 @@ namespace BuildSystem
         * *************************************************/
 
         //create the buttons for all the elements
-        public void Populatemenu(ScriptableObjectContainer container, ObjectSelector selector)
+        public void Populatemenu(BuildItemContainer container, ObjectSelector selector)
         {
             for (int i = 0; i < container.items.Count; i++)
             {
                 var item = Instantiate(objPrefab, ButtonsParent).GetComponent<BuilderObjectUI>();
-                //reset postion and scale of the instantiated item
+                //reset position and scale of the instantiated item
                 RectTransform rt = item.GetComponent<RectTransform>();
                 rt.localScale = Vector3.one;
                 rt.localPosition = Vector3.zero;
@@ -139,7 +139,7 @@ namespace BuildSystem
                 item.SetUp(container.items[i]);
                 item.AddButtonListner(selector.UseItem, i);
 
-                if (i == 0) // select the first button
+                if (i == 0) //select the first button
                 {
                     SetSelectedItem(item);
                 }

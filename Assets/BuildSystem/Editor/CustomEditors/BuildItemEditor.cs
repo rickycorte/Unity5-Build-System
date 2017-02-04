@@ -2,13 +2,13 @@
 using UnityEditor;
 using BuildSystem;
 
-[CustomEditor(typeof(ScriptableObjectToPlace))]
-public class ScriptableObjectToPlaceEditor : Editor {
+[CustomEditor(typeof(BuildItem))]
+public class BuildItemEditor : Editor {
 
     public override void OnInspectorGUI()
     {
 
-        ScriptableObjectToPlace obj = (ScriptableObjectToPlace)target;
+        BuildItem obj = (BuildItem)target;
 
         EditorGUILayout.LabelField("Display Name: ");
         obj.Name = EditorGUILayout.TextField(obj.Name);

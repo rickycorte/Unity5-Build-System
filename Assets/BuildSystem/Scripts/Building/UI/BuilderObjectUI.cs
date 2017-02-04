@@ -15,18 +15,13 @@ namespace BuildSystem
         Button btn;
 
         [Header("Border Colors")]
-        [SerializeField]
-        Color selectColor = Color.green;
-        [SerializeField]
-        Color notSelectColor = new Color(0, 0, 0, 0);
+        [SerializeField] Color selectColor = Color.green;
+        [SerializeField] Color notSelectColor = new Color(0, 0, 0, 0);
 
         [Header("Item Properties")]
-        [SerializeField]
-        Text itemName;
-        [SerializeField]
-        Image itemImage;
-        [SerializeField]
-        Image borderImg;
+        [SerializeField] Text itemName;
+        [SerializeField] Image itemImage;
+        [SerializeField] Image borderImg;
 
         //set the click callback
         public void AddButtonListner(listner ls, int myIndex)
@@ -35,16 +30,16 @@ namespace BuildSystem
             btn.onClick.AddListener(
                 () =>
                 {
-                    ls(myIndex); // call handler
-                var ui = GetComponentInParent<BuilderUI>(); // select this button and deselct the old one
-                if (ui != null) ui.SetSelectedItem(this);
+                    ls(myIndex); //call handler
+                var ui = GetComponentInParent<BuilderUI>(); //select this button and deselct the old one
+                if (ui != null) ui.SetSelectedItem(this); //select the current item (green border)
                     else Debug.LogError("Missing Builder UI to deselect old button");
                 }
                 );
         }
 
         //set image and text
-        public void SetUp(ScriptableObjectToPlace o)
+        public void SetUp(BuildItem o)
         {
             if (itemName != null) itemName.text = o.Name;
             if (itemImage != null) itemImage.sprite = o.UiPicture;
