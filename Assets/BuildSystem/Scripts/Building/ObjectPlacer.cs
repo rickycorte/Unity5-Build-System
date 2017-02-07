@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// Class the handle the object placement in the world
+    /// </summary>
     public class ObjectPlacer : MonoBehaviour
     {
 
@@ -27,7 +29,7 @@ namespace BuildSystem
         [SerializeField] Camera cam;
 
         [Tooltip("Layers that this script will use to get hit points to place objects")]
-        [SerializeField] LayerMask GroundLayer;
+        [SerializeField] LayerMask groundLayer;
 
         [SerializeField] float maxPlaceDistance = 10f;
 
@@ -36,7 +38,7 @@ namespace BuildSystem
         //**********************************************************************************************
         [Header("Rotation Settings")]
 
-        [Tooltip("Face the object to the player, THIS BLOCKS SNAP ROTAION!")]
+        [Tooltip("Face the object to the player, THIS BLOCKS SNAP ROTATION!")]
         [SerializeField] bool faceMe = false;
 
         [SerializeField] float snapRotationAngle = 45;
@@ -76,7 +78,7 @@ namespace BuildSystem
 
         bool canPlace = false;
 
-        bool mouseIsNotOnUI = false;
+        bool mouseIsNotOnUI = true;
 
         //object rotation
         float objectSnapCurrentRotaion = 0;
@@ -116,7 +118,7 @@ namespace BuildSystem
                 cam = Camera.main;
             myTransform = transform;
 
-            if (ghostMaterial == null) Debug.LogError("Missing ghostMaterial, please assign it!");
+            if (ghostMaterial == null) Debug.LogWarning("Missing ghostMaterial, ignore this warning if you don't want to use it.");
             if (cam == null) Debug.LogError("Missing cam, please assign it!");
         }
 
@@ -158,9 +160,11 @@ namespace BuildSystem
 
         private void FixedUpdate()
         {
+            //update ghost object position
             if (canPlace && ghostObjInstance != null)
             {
                 MoveGhostObject();
+                //update rotation to face the placer
                 if (faceMe)
                 {
                     snapRotationAngle =  GetFaceToRotation(myTransform, ghostObjInstance);
@@ -172,13 +176,19 @@ namespace BuildSystem
         * Activation
         * *************************************************/
 
+        /// <summary>
+        /// Toggle Object Placer
+        /// </summary>
         public void Toggle()
         {
             canPlace = !canPlace;
             Toggle(canPlace);
         }
 
-
+        /// <summary>
+        /// Active/Disable Object Placer
+        /// </summary>
+        /// <param name="val">Is active</param>
         public void Toggle(bool val)
         {
             canPlace = val;
@@ -187,7 +197,10 @@ namespace BuildSystem
         }
 
 
-        //active the script input handler, use toggle to start placeing objects
+        /// <summary>
+        /// Active the script input handler, use toggle to start placing objects
+        /// </summary>
+        /// <param name="val"></param>
         public void Enable(bool val)
         {
             isActive = val;
@@ -198,7 +211,9 @@ namespace BuildSystem
          * Ghost Object Creation & Movement & Place
          * *************************************************/
 
-        //create ghost object
+        /// <summary>
+        /// Create ghost object
+        /// </summary>
         void CreateGhostObject()
         {
             DestroyGhostObject();
@@ -249,7 +264,9 @@ namespace BuildSystem
         }
 
 
-        //move the ghost object
+        /// <summary>
+        /// Move the ghost object
+        /// </summary>
         void MoveGhostObject()
         {
             RaycastHit hit;
@@ -269,7 +286,7 @@ namespace BuildSystem
             }
 
             //find hit position and move there the object
-            if (Physics.Raycast(r, out hit, maxPlaceDistance, GroundLayer))
+            if (Physics.Raycast(r, out hit, maxPlaceDistance, groundLayer))
             {
                 //set object position to hit point
                 Vector3 pos = hit.point;
@@ -280,7 +297,9 @@ namespace BuildSystem
         }
 
 
-        //place the object in the scene
+        /// <summary>
+        /// Place the object in the scene
+        /// </summary>
         void PlaceGhostObject()
         {
             if (ghostObjInstance != null)
@@ -308,7 +327,9 @@ namespace BuildSystem
         }
 
 
-        //remove ghost object from scene
+        /// <summary>
+        /// Remove ghost object from scene
+        /// </summary>
         void DestroyGhostObject()
         {
             if (ghostObjInstance != null)
@@ -323,7 +344,11 @@ namespace BuildSystem
         * Ghost Object Alignament & Rotation
         * *************************************************/
 
-        //align ghost object to surface based on raycast hit normal
+        /// <summary>
+        /// Align ghost object to surface based on raycast hit normal
+        /// </summary>
+        /// <param name="itemToAlign">Item to align</param>
+        /// <param name="hitNormal">Normal to use to align object</param>
         void AlignGhostToSurface(Transform itemToAlign,Vector3 hitNormal)
         {
             if (itemToAlign == null) return;
@@ -332,8 +357,14 @@ namespace BuildSystem
 
         }
 
-        //check if the object pivot is in center or not
-        //this function returns the pivot Offset (can be Vector3.zero)
+        /// <summary>
+        /// Check if the object pivot is in center or not.
+        /// This function returns the pivot Offset (can be Vector3.zero)
+        /// </summary>
+        /// <param name="item">Item to use</param>
+        /// <param name="renderer">Renderer attached to the item</param>
+        /// <param name="pivotOffset">Offset of the pivot to be in base</param>
+        /// <returns></returns>
         bool CheckIfObjectPivotIsCenter(Transform item, MeshRenderer renderer, out Vector3 pivotOffset)
         {
             if (renderer == null)
@@ -356,7 +387,13 @@ namespace BuildSystem
             }
         }
 
-        //create a pivot parent to better place the object
+        /// <summary>
+        /// Create a pivot parent to better place the object
+        /// </summary>
+        /// <param name="item">Item to use</param>
+        /// <param name="renderer">Renderer of the item</param>
+        /// <param name="pivotOffset">Offset of the pivot</param>
+        /// <returns></returns>
         Transform CreateBasePivot(Transform item,MeshRenderer renderer, Vector3 pivotOffset)
         {
             if (item == null || renderer == null)
@@ -384,7 +421,12 @@ namespace BuildSystem
         }
 
 
-        //rotate ghost object to face the placer
+        /// <summary>
+        /// Rotate ghost object to face the placer
+        /// </summary>
+        /// <param name="target">Object placer</param>
+        /// <param name="other">Item to rotate</param>
+        /// <returns></returns>
         float GetFaceToRotation(Transform target,Transform other)
         {
             if (objectToPlace == null || ghostRenderer)
@@ -394,7 +436,10 @@ namespace BuildSystem
             return Quaternion.LookRotation(dir.normalized).eulerAngles.y;
         }
 
-        //snap rotation of the object
+        /// <summary>
+        /// Snap rotation of the object
+        /// </summary>
+        /// <param name="mult">Rotation multiplier</param>
         void SnapRotation(int mult)
         {
             objectSnapCurrentRotaion += mult * snapRotationAngle;
@@ -404,7 +449,10 @@ namespace BuildSystem
         * Ghost Object properties modifiers
         * *************************************************/
 
-        //active/reset shadow preset of renderer
+        /// <summary>
+        /// Active/Reset shadow preset of renderer
+        /// </summary>
+        /// <param name="val">Active shadows</param>
         void EnableGhostShadows(bool val)
         {
             if (!val)
@@ -419,7 +467,11 @@ namespace BuildSystem
 
         }
 
-        //toggle ghost colliders
+        /// <summary>
+        /// Toggle ghost colliders
+        /// </summary>
+        /// <param name="item">Item to use</param>
+        /// <param name="val">Active colliders</param>
         void EnableObjectCollision(Transform item ,bool val)
         {
             if (item == null) return;
@@ -432,7 +484,10 @@ namespace BuildSystem
         }
 
 
-        //set all rigidbodies to be kinematic or reset them viwh previous state
+        /// <summary>
+        /// Set all rigidbodies to be kinematic or reset them with previous state
+        /// </summary>
+        /// <param name="val">Active rigidbodies</param>
         void EnableGhostObjRigidbodies(bool val)
         {
             //get all bodies
@@ -449,7 +504,11 @@ namespace BuildSystem
 
         }
 
-        //save the old state for the body reset
+        /// <summary>
+        /// Save the old state for the body reset
+        /// </summary>
+        /// <param name="val">New kinematic value</param>
+        /// <param name="bodies">List of rigidbodies to use</param>
         void GetOldRigidBodyStateAndOvverride(bool val, Rigidbody[] bodies)
         {
             bodiesPrevState = new bool[bodies.Length];
@@ -461,7 +520,10 @@ namespace BuildSystem
             }
         }
 
-        //set the old body state
+        /// <summary>
+        /// Set the old rigidbodies state
+        /// </summary>
+        /// <param name="bodies"></param>
         void SetOldRigidbodyState(Rigidbody[] bodies)
         {
             for (int i = 0; i < bodies.Length; i++)
@@ -471,10 +533,15 @@ namespace BuildSystem
         }
 
 
-        //set all materials to ghost and store the old ones
+        /// <summary>
+        /// Set all materials to ghost and store the old ones.
+        /// If ghostMaterial is null, no operation is performed
+        /// </summary>
+        /// <param name="val">Use ghost material</param>
         void EnableGhostMaterials(bool val)
         {
             if (ghostRenderer == null) return;
+            if (ghostMaterial == null) return; //don't perform operation if ghost material is not assigned
 
             if (val)
             {
@@ -487,7 +554,11 @@ namespace BuildSystem
             }
         }
 
-        //create a list of ghost materials to apply
+        /// <summary>
+        /// Create a list of ghost materials to apply
+        /// </summary>
+        /// <param name="lenght">Arry lenght</param>
+        /// <returns></returns>
         Material[] CreateGhostMaterialArray(int lenght)
         {
             Material[] ghosts = new Material[lenght];
@@ -503,7 +574,9 @@ namespace BuildSystem
         * External Prafab Setup
         * *************************************************/
 
-        //add complex mesh handler if it's required
+        /// <summary>
+        /// Add complex mesh handler if it's required
+        /// </summary>
         void AddComplexGhostGenerator()
         {
             if (useCompleMesh)
@@ -513,10 +586,13 @@ namespace BuildSystem
             }
         }
 
-        //set the prefab to spawn, NO GHOST is created
+        /// <summary>
+        /// Set the prefab to spawn, no ghost is created
+        /// </summary>
+        /// <param name="item">Item to spawn</param>
         public void SetObjectToPlace(BuildItem item)
         {
-            if (item == null || !BuildItem.isValid(item))
+            if (item == null || !item.isValid())
             {
                 Debug.LogError("Invalid item!");
                 return;
@@ -528,10 +604,13 @@ namespace BuildSystem
             AddComplexGhostGenerator();
         }
 
-        //Set the prefab to spawn and create its ghost
+        /// <summary>
+        /// Set the prefab to spawn and create its ghost
+        /// </summary>
+        /// <param name="item">Item to spawn</param>
         public void SetObjectToPlaceAndCreateGhost(BuildItem item)
         {
-            if (item == null || !BuildItem.isValid(item))
+            if (item == null || !item.isValid())
             {
                 
                 Debug.LogError("invalid Item!");
@@ -542,7 +621,11 @@ namespace BuildSystem
         }
 
 
-        //set a object to place without using ScriptableObjects
+        /// <summary>
+        /// Set a object to place without using ScriptableObjects
+        /// </summary>
+        /// <param name="prefab">Prefab to spawn</param>
+        /// <param name="isComplexMesh">Require complex mesh computation</param>
         public void SetObjcetToPlace(GameObject prefab, bool isComplexMesh = false)
         {
             if (prefab == null)
@@ -556,7 +639,11 @@ namespace BuildSystem
             AddComplexGhostGenerator();
         }
 
-        //set a object to place without using ScriptableObjects, and then crete its ghost
+        /// <summary>
+        /// Set a object to place without using ScriptableObjects, and then create its ghost
+        /// </summary>
+        /// <param name="prefab">Prefab to spawn</param>
+        /// <param name="isComplexMesh">Require complex mesh computation</param>
         public void SetObjectToPlaceAndCreateGhost(GameObject prefab, bool isComplexMesh = false)
         {
             if (prefab == null)
@@ -573,13 +660,19 @@ namespace BuildSystem
         * External Setup Misc
         * *************************************************/
 
-        //set if the mouse is over a ui element and this script should not place and object
+        /// <summary>
+        /// Set if the mouse is over a UI element. If yes this script won't place objects
+        /// </summary>
+        /// <param name="value"></param>
         public void SetIsMouseNotOnUI(bool value)
         {
             mouseIsNotOnUI = value;
         }
 
-        //set the place mode
+        /// <summary>
+        /// Set the place mode
+        /// </summary>
+        /// <param name="pm">Mode</param>
         public void SetPlaceMode(PlaceMode pm)
         {
             switch (pm)
@@ -593,7 +686,10 @@ namespace BuildSystem
             }
         }
 
-        //set the object rotaion mode
+        /// <summary>
+        /// Set rotation mode
+        /// </summary>
+        /// <param name="rm">Mode</param>
         public void SetRotaionMode(RotaionMode rm)
         {
             switch (rm)
@@ -607,10 +703,22 @@ namespace BuildSystem
             }
         }
 
-        //Set the snap angle to use in object snap rotation
+        /// <summary>
+        /// Set the snap angle to use in object snap rotation
+        /// </summary>
+        /// <param name="angle"></param>
         public void SetSnapAngle(float angle)
         {
             snapRotationAngle = angle;
+        }
+
+        /// <summary>
+        /// Set the ghost material
+        /// </summary>
+        /// <param name="newGhostMaterial">material to use</param>
+        public void SetGhostMaterial(Material newGhostMaterial)
+        {
+            ghostMaterial = newGhostMaterial;
         }
 
 
@@ -619,7 +727,6 @@ namespace BuildSystem
         * *************************************************/
 
 #if UNITY_EDITOR
-        //DEBUG
         private void OnDrawGizmos()
         {
             if (Application.isPlaying)

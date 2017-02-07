@@ -3,6 +3,9 @@ using UnityEditor;
 using BuildSystem;
 using UnityEditorInternal;
 
+/// <summary>
+/// Custom Editor for Build Items Container
+/// </summary>
 [CustomEditor(typeof(BuildItemContainer))]
 public class BuildItemContainerEditor : Editor {
 
@@ -30,19 +33,30 @@ public class BuildItemContainerEditor : Editor {
         reorderList.onRemoveCallback -= RemoveItem;
     }
 
-    //draw reoderable list
+    /// <summary>
+    /// Draw reoderable list
+    /// </summary>
     public override void OnInspectorGUI()
     {
         reorderList.DoLayoutList();
     }
 
-    //draw list header
+    /// <summary>
+    /// Draw list header
+    /// </summary>
+    /// <param name="rect"></param>
     void DrawHeader(Rect rect)
     {
         GUI.Label(rect, "Build Item List:");
     }
 
-    //draw list item
+    /// <summary>
+    /// Draw list item
+    /// </summary>
+    /// <param name="rect"></param>
+    /// <param name="index"></param>
+    /// <param name="active"></param>
+    /// <param name="focused"></param>
     void DrawElement(Rect rect, int index, bool active, bool focused)
     {
         EditorGUI.BeginChangeCheck();
@@ -68,20 +82,29 @@ public class BuildItemContainerEditor : Editor {
 
     }
 
-    //add item to list
+    /// <summary>
+    /// Add item to list
+    /// </summary>
+    /// <param name="ls"></param>
     void AddItem(ReorderableList ls)
     {
         myListBlock.items.Add(null);
         EditorUtility.SetDirty(target);
     }
 
-    //remove item from list (Handler)
+    /// <summary>
+    /// (Handler) Remove item from list
+    /// </summary>
+    /// <param name="ls"></param>
     void RemoveItem(ReorderableList ls)
     {
         RmItem(ls.index);
     }
 
-    //remove item by index
+    /// <summary>
+    /// Remove item by index
+    /// </summary>
+    /// <param name="index"></param>
     void RmItem(int index)
     {
         myListBlock.items.RemoveAt(index);

@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// Helper class used to create complex ghost objects (Multiple mesh renderers)
+    /// </summary>
     public class ComplexGhostCreator : MonoBehaviour
     {
 
@@ -23,12 +25,17 @@ namespace BuildSystem
         * Ghost Creation/Destruction
         * *************************************************/
 
-        //create a complex ghost (more meshes)
+        /// <summary>
+        /// Create a complex ghost (more meshes)
+        /// </summary>
+        /// <param name="objRoot">Parent of all the renderers</param>
+        /// <param name="ghostMat">Material to apply to all renderers</param>
         public void CreateComplexGhost(Transform objRoot, Material ghostMat)
         {
-            if (objRoot == null || ghostMat == null)
+            if (ghostMat == null) return; //don't do anything, maybe you don't want a ghost object
+            if (objRoot == null)
             {
-                Debug.LogError("CreateComplexGhost can't have null paramteres! Aborting creation.");
+                Debug.LogError("Please send a valid object to perform the operation! Aborting creation.");
                 return;
             }
 
@@ -50,7 +57,9 @@ namespace BuildSystem
         }
 
 
-        //reapply old materials to the renderes cached after create
+        /// <summary>
+        /// Apply old materials to the renderes cached after create
+        /// </summary>
         public void RemoveComplexGhost()
         {
             if (meshRenderers == null) return;
@@ -65,7 +74,9 @@ namespace BuildSystem
             //Debug.Log("Removed complex ghost");
         }
 
-        //clear chached values
+        /// <summary>
+        /// Clear chached values
+        /// </summary>
         public void ClearCache()
         {           
             oldMats.Clear();
@@ -76,7 +87,12 @@ namespace BuildSystem
         * Helpers
         * *************************************************/
 
-        //create an array of ghost materials
+        /// <summary>
+        /// create an array of ghost materials
+        /// </summary>
+        /// <param name="size">Lenght of the array</param>
+        /// <param name="ghostMaterial">Material to use in the array</param>
+        /// <returns></returns>
         Material[] ghostMatArray(int size, Material ghostMaterial)
         {
             Material[] ghosts = new Material[size];

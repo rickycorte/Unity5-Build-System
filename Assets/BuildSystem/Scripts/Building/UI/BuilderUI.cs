@@ -7,9 +7,12 @@ namespace BuildSystem
 {
     //If Enter button moves the object selection, edit the Submit button in Edit>Project Settings>Input
 
+    /// <summary>
+    /// Build item selection UI menu
+    /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     [RequireComponent(typeof(Animator))]
-    public class BuilderUI : MonoBehaviour
+    public class BuilderUI : MonoBehaviour, IItemSelectionUI
     {
 
 
@@ -20,15 +23,12 @@ namespace BuildSystem
         [Header("References")]
 
         [Tooltip("Parent of all the buttons")]
-        [SerializeField]
-        Transform ButtonsParent;
+        [SerializeField] Transform ButtonsParent;
 
         [Tooltip("Button prefab to show an item")]
-        [SerializeField]
-        BuilderObjectUI objPrefab;
+        [SerializeField] BuilderObjectUI objPrefab;
 
-        [SerializeField]
-        Text CollapseMenuButtonText;
+        [SerializeField] Text CollapseMenuButtonText;
 
         /****************************************************
         * Variables & Components
@@ -49,7 +49,6 @@ namespace BuildSystem
         * initialization
         * *************************************************/
 
-        // Use this for initialization
         void Start()
         {
             cv = GetComponent<CanvasGroup>();
@@ -66,7 +65,9 @@ namespace BuildSystem
 
         }
 
-        //set the grid item size to best fit the ui
+        /// <summary>
+        /// Set the grid item size to best fit the UI
+        /// </summary>
         void SetUpGrid()
         {
             if (grid == null) return;
@@ -82,13 +83,18 @@ namespace BuildSystem
         * Activation
         * *************************************************/
 
-        //toggle menu
+        /// <summary>
+        /// Toggle menu
+        /// </summary>
         public void ToggleMenu()
         {
             ToggleMenu(!cv.blocksRaycasts);
         }
 
-        //toggle menu with a value
+        /// <summary>
+        /// Set menu active status
+        /// </summary>
+        /// <param name="val">Is active</param>
         public void ToggleMenu(bool val)
         {
             anim.SetBool("isOpen", val);
@@ -103,20 +109,25 @@ namespace BuildSystem
         * Extrernal Actions
         * *************************************************/
 
-        //collapse the menu but not toggle it so ic can be reopened
+        /// <summary>
+        /// Collapse the menu but not toggle it so it can be re-opened
+        /// </summary>
         public void CollapseMenu()
         {
             isMenuCollapsed = !isMenuCollapsed;
             SetIsCollapsed(isMenuCollapsed);
         }
 
-        //highlight the selected item and deselect the current one
-        public void SetSelectedItem(BuilderObjectUI bo)
+        /// <summary>
+        /// Highlight the selected item and deselect the current one
+        /// </summary>
+        /// <param name="itemToHightlight">Item to highlight</param>
+        public void SetSelectedItem(BuilderObjectUI itemToHightlight)
         {
             if (selectedObject != null) selectedObject.Select(false);
 
-            bo.Select(true);
-            selectedObject = bo;
+            itemToHightlight.Select(true);
+            selectedObject = itemToHightlight;
 
         }
 
@@ -125,7 +136,11 @@ namespace BuildSystem
         * UI generation
         * *************************************************/
 
-        //create the buttons for all the elements
+        /// <summary>
+        /// Create the buttons for all the elements
+        /// </summary>
+        /// <param name="container">Item list</param>
+        /// <param name="selector">Object Selector Script referenct for callbacks</param>
         public void Populatemenu(BuildItemContainer container, ObjectSelector selector)
         {
 
@@ -147,7 +162,10 @@ namespace BuildSystem
             }
         }
 
-        //collapse the menu without disabling it
+        /// <summary>
+        /// Collapse the menu without disabling it
+        /// </summary>
+        /// <param name="val">Collapese state</param>
         void SetIsCollapsed(bool val)
         {
             isMenuCollapsed = val;

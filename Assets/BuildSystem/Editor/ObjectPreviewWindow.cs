@@ -4,7 +4,9 @@ using System.IO;
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// Helper window that creates png previews of prefabs in low resolution using Unity asset preview
+    /// </summary>
     public class ObjectPreviewWindow : EditorWindow
     {
 
@@ -53,7 +55,9 @@ namespace BuildSystem
         }
 
 
-        //save the current preview to hdd
+        /// <summary>
+        /// Save the current preview to hdd
+        /// </summary>
         void SavePreview()
         {
             if (currentPreview == null)
@@ -75,13 +79,17 @@ namespace BuildSystem
 
         }
 
-        //Create the image preview
+        /// <summary>
+        /// Create the image preview
+        /// </summary>
         void CreatePreview()
         {
             currentPreview = AssetPreview.GetAssetPreview(obj);
         }
 
-        //check if the save directory exitst. If no create it
+        /// <summary>
+        /// Check if the save directory exitst. If no creates it
+        /// </summary>
         void CreteSaveFolder()
         {
             if (!Directory.Exists(savePath))

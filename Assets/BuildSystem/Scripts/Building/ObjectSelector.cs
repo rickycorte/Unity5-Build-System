@@ -16,8 +16,7 @@ namespace BuildSystem
         [Header("Containers")]
 
         [Tooltip("List of spawnable objects")]
-        [SerializeField]
-        BuildItemContainer buildObjectList;
+        [SerializeField] BuildItemContainer buildObjectList;
 
         [Header("UI")]
 
@@ -36,7 +35,7 @@ namespace BuildSystem
         * *************************************************/
 
         ObjectPlacer objPlacer;
-        BuilderUI builderUI;
+        IItemSelectionUI builderUI;
 
         KeyCode activeKey;
 
@@ -62,17 +61,34 @@ namespace BuildSystem
                 Debug.LogError("Missing buildObjectList, please assign it!");
                 return;
             }
-            builderUI = Instantiate(BuilderMenuPrefab).GetComponentInChildren<BuilderUI>();
-            builderUI.Populatemenu(buildObjectList, this);
 
-            objPlacer.SetObjectToPlace(buildObjectList.items[0]); // imposta come oggetto di default il primo
+            
+            builderUI = Instantiate(BuilderMenuPrefab).GetComponentInChildren<IItemSelectionUI>(); //create the ui
+            if (builderUI == null)
+            {
+                Debug.LogError("Please make sure that the UI prefab has one script that implements: IItemSlectionUI interface");
+                return;
+            }
+
+            builderUI.Populatemenu(buildObjectList, this); //populate it
+
+            if (!buildObjectList.isValid())
+            {
+                Debug.LogError("Please add some some Items to list");
+                return;
+            }
+
+            objPlacer.SetObjectToPlace(buildObjectList.items[0]); //use the first item as default and set it
         }
 
         /****************************************************
         * Activation
         * *************************************************/
 
-        //Active the script input handler
+        /// <summary>
+        /// Active the script input handler
+        /// </summary>
+        /// <param name="val">Is active</param>
         public void Enable(bool val)
         {
             isActive = val;
@@ -80,7 +96,9 @@ namespace BuildSystem
             GetComponent<ObjectPlacer>().Enable(isActive);
         }
 
-        //toggle object selector and oobject placer
+        /// <summary>
+        /// Toggle Object Selector and Object Placer
+        /// </summary>
         public void Toggle()
         {
             isOpen = !isOpen;
@@ -88,7 +106,10 @@ namespace BuildSystem
             objPlacer.Toggle(isOpen);
         }
 
-        //toggle object selector and oobject placer based on value
+        /// <summary>
+        /// Set active state of Toggle Object Selector and Object Placer
+        /// </summary>
+        /// <param name="val"></param>
         public void Toggle(bool val)
         {
             isOpen = val;
@@ -102,11 +123,13 @@ namespace BuildSystem
 
         private void Update()
         {
+            //handle menu open button press
             if (Input.GetKeyDown(activeKey) && isActive)
             {
                 ToggleUI();
                 isOpen = !isOpen;
             }
+            //handle collpase button press
             if (Input.GetKeyDown(CollapseMenuKey) && isActive)
             {
                 if (builderUI != null) builderUI.CollapseMenu();
@@ -117,7 +140,7 @@ namespace BuildSystem
         {
             if (isOpen)
             {
-                isOnUI();
+                objPlacer.SetIsMouseNotOnUI( !isMouseOnUI() );
             }
         }
 
@@ -125,16 +148,24 @@ namespace BuildSystem
         * UI Control
         * *************************************************/
 
-        //check if the mouse is over ui or not
-        void isOnUI()
+        /// <summary>
+        /// Check if the mouse is over UI or not
+        /// </summary>
+        /// <returns></returns>
+        bool isMouseOnUI()
         {
-            objPlacer.SetIsMouseNotOnUI(
-              !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject() // controlla che il mouse non sia sopra a dell'ui
-            );
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+            {
+                Debug.LogError("Please create an eventSytem in the scene!");
+                return true;
+            }
 
+            return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(); // controlla che il mouse non sia sopra a dell'ui
         }
 
-        //toggle object selection ui
+        /// <summary>
+        /// Toggle Object Selection UI menu
+        /// </summary>
         void ToggleUI()
         {
             if (builderUI != null)
@@ -144,7 +175,10 @@ namespace BuildSystem
             else Debug.LogError("Missing UI for ObjectSelector!");
         }
 
-        //toggle object slection ui based on a value
+        /// <summary>
+        /// Set active state of Object Selection UI menu
+        /// </summary>
+        /// <param name="val">Is active</param>
         void ToggleUI(bool val)
         {
             if (builderUI != null)
@@ -158,7 +192,10 @@ namespace BuildSystem
         * GObject Placer Setup
         * *************************************************/
 
-        //ui callback to set the desired item in object placer
+        /// <summary>
+        /// UI callback to set the desired item in Object Placer
+        /// </summary>
+        /// <param name="index">Index of the item to select</param>
         public void UseItem(int index)
         {
             if (index >= 0 && index < buildObjectList.items.Count)

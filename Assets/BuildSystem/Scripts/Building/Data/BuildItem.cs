@@ -2,7 +2,10 @@
 
 namespace BuildSystem
 {
-    [CreateAssetMenu(fileName = "Build Obj", menuName = "Building/Object", order = 1)]
+    /// <summary>
+    /// Item to use in Build Item Container
+    /// </summary>
+    [CreateAssetMenu(fileName = "BuildItem", menuName = "Building/Item", order = 1)]
     public class BuildItem : ScriptableObject
     {
         public string Name = "No Name";
@@ -11,21 +14,24 @@ namespace BuildSystem
         public bool isComplexMesh = false;
 
 
-        //check if the item is valid or not
-        public static bool isValid(BuildItem i)
+        /// <summary>
+        /// Check if a Build Item is valid or not
+        /// </summary>
+        /// <returns></returns>
+        public bool isValid()
         {
-            if (i.Name == "")
+            if (Name == "")
                 Debug.LogWarning("Build Item name is null");
 
-            if (i.UiPicture == null)
+            if (UiPicture == null)
             {
-                Debug.LogError("item: " + i.name + " has null UiPicture!");
+                Debug.LogError("item: " + name + " has null UiPicture!");
                 return false;
             }
 
-            if (i.Prefab == null)
+            if (Prefab == null)
             {
-                Debug.LogError("item: " + i.name + " has null Prefab!");
+                Debug.LogError("item: " + name + " has null Prefab!");
                 return false;
             }
 

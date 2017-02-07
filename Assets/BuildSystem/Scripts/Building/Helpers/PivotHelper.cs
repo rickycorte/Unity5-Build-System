@@ -2,11 +2,15 @@
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// Helper class that handle the fake pivot deletion
+    /// </summary>
     public class PivotHelper : MonoBehaviour
     {
 
-        //remove the fake pivot and leave the original object in the scene
+        /// <summary>
+        /// Remove the fake pivot and leave the original object in the scene
+        /// </summary>
         public void DeletePivot()
         {
             Transform t = GetComponentsInChildren<Transform>()[1];

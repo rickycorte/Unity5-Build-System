@@ -2,6 +2,9 @@
 using UnityEditor;
 using BuildSystem;
 
+/// <summary>
+/// Custom Editor for Build Item
+/// </summary>
 [CustomEditor(typeof(BuildItem))]
 public class BuildItemEditor : Editor {
 
