@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,7 +27,9 @@ namespace BuildSystem
         [Tooltip("Button prefab to show an item")]
         [SerializeField] BuilderObjectUI objPrefab;
 
+        [Header("Settings")]
         [SerializeField] Text CollapseMenuButtonText;
+        [SerializeField] bool collapseAfterSelect = false;
 
         /****************************************************
         * Variables & Components
@@ -122,12 +123,14 @@ namespace BuildSystem
         /// Highlight the selected item and deselect the current one
         /// </summary>
         /// <param name="itemToHightlight">Item to highlight</param>
-        public void SetSelectedItem(BuilderObjectUI itemToHightlight)
+        public void SetSelectedItem(BuilderObjectUI itemToHightlight, bool canCollapse = false)
         {
             if (selectedObject != null) selectedObject.Select(false);
 
             itemToHightlight.Select(true);
             selectedObject = itemToHightlight;
+
+            if (collapseAfterSelect && canCollapse) CollapseMenu();
 
         }
 
@@ -172,5 +175,15 @@ namespace BuildSystem
             anim.SetBool("isCollapsed", val);
             if (CollapseMenuButtonText != null) CollapseMenuButtonText.text = (val) ? ">>" : "<<";
         }
+
+        /// <summary>
+        /// Get collapse state of the menu
+        /// </summary>
+        /// <returns></returns>
+        public bool isCollapsed()
+        {
+            return isMenuCollapsed;
+        }
+
     }
 }

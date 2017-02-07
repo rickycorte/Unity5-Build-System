@@ -14,20 +14,15 @@ namespace BuildSystem
         * *************************************************/
 
         [Header("Containers")]
-
         [Tooltip("List of spawnable objects")]
         [SerializeField] BuildItemContainer buildObjectList;
 
         [Header("UI")]
-
         [Tooltip("UI menu that you want to use to display the spawnable objects")]
-        [SerializeField]
-        GameObject BuilderMenuPrefab;
+        [SerializeField] GameObject BuilderMenuPrefab;
 
         [Header("Input Settings")]
-
-        [SerializeField]
-        KeyCode CollapseMenuKey = KeyCode.None;
+        [SerializeField] KeyCode CollapseMenuKey = KeyCode.None;
 
 
         /****************************************************
@@ -44,13 +39,26 @@ namespace BuildSystem
         bool isOpen = false;
 
         /****************************************************
+        * Events
+        * *************************************************/
+
+        public delegate void UIEvent(bool status);
+        public delegate void SelectionEvent(int index);
+
+
+        public UIEvent OnMenuToggle;
+        public UIEvent OnMenuCollapse;
+
+        public SelectionEvent OnItemSelect;
+
+        /****************************************************
         * Initialization
         * *************************************************/
 
         private void Start()
         {
             objPlacer = GetComponent<ObjectPlacer>();
-            activeKey = objPlacer.TOGGLEKEY;
+            activeKey = objPlacer.ToggleKey;
             if (BuilderMenuPrefab == null)
             {
                 Debug.LogError("Missing BuilderMenuPrefab, please assign it!");
@@ -102,8 +110,7 @@ namespace BuildSystem
         public void Toggle()
         {
             isOpen = !isOpen;
-            ToggleUI(isOpen);
-            objPlacer.Toggle(isOpen);
+            Toggle(isOpen);
         }
 
         /// <summary>
@@ -115,6 +122,7 @@ namespace BuildSystem
             isOpen = val;
             ToggleUI(isOpen);
             objPlacer.Toggle(isOpen);
+            if (OnMenuToggle != null) OnMenuToggle(isOpen);
         }
 
         /****************************************************
@@ -128,11 +136,14 @@ namespace BuildSystem
             {
                 ToggleUI();
                 isOpen = !isOpen;
+                if (OnMenuToggle != null) OnMenuToggle(isOpen);
             }
-            //handle collpase button press
+
+            //handle collapse button press
             if (Input.GetKeyDown(CollapseMenuKey) && isActive)
             {
                 if (builderUI != null) builderUI.CollapseMenu();
+                if (OnMenuCollapse != null) OnMenuCollapse(builderUI.isCollapsed());
             }
         }
 
@@ -201,6 +212,7 @@ namespace BuildSystem
             if (index >= 0 && index < buildObjectList.items.Count)
             {
                 objPlacer.SetObjectToPlaceAndCreateGhost(buildObjectList.items[index]);
+                if (OnItemSelect != null) OnItemSelect(index);
             }
             else Debug.LogError("No item for index: " + index);
         }

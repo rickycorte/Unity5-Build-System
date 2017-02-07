@@ -15,6 +15,8 @@ namespace BuildSystem
 
         void CollapseMenu();
 
+        bool isCollapsed();
+
         void Populatemenu(BuildItemContainer container, ObjectSelector selector);
 
     }

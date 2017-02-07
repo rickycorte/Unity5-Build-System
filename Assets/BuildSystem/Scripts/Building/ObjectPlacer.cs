@@ -65,10 +65,19 @@ namespace BuildSystem
 
         public enum RotaionMode { snap, facePlacer };
 
-        public KeyCode TOGGLEKEY { get { return toggleKey; } }
+        public KeyCode ToggleKey { get { return toggleKey; } }
 
         public bool IsActive { get { return isActive; } }
 
+        /****************************************************
+        * Events
+        * *************************************************/
+
+        public delegate void BuildEvent();
+
+        public event BuildEvent OnGhostObjectCreation;
+        public event BuildEvent OnGhostObjectDestroy;
+        public event BuildEvent OnGhostObjectPlace;
 
         /****************************************************
         * Variables
@@ -261,6 +270,11 @@ namespace BuildSystem
                 ghostObjInstance = CreateBasePivot(ghostObjInstance, ghostRenderer,pivotOffsetExtra);
                 usingFakePivot = true;
             }
+
+            if (OnGhostObjectCreation != null)
+            {
+                OnGhostObjectCreation();
+            }
         }
 
 
@@ -321,6 +335,11 @@ namespace BuildSystem
 
                 ghostObjInstance = null; //leave the object in the scene
 
+                if (OnGhostObjectPlace != null)
+                {
+                    OnGhostObjectPlace();
+                }
+
                 CreateGhostObject(); //create a new ghost object
             }
             else Debug.LogError("Unable to spawn object, ghost reference is null!");
@@ -336,6 +355,11 @@ namespace BuildSystem
             {
                 Destroy(ghostObjInstance.gameObject);
                 if (complexGhostCreator != null) complexGhostCreator.ClearCache();
+
+                if (OnGhostObjectDestroy != null)
+                {
+                    OnGhostObjectDestroy();
+                }
             }
         }
 

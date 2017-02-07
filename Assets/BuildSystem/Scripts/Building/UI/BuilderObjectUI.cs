@@ -38,7 +38,7 @@ namespace BuildSystem
                 {
                     callback(myIndex); //call handler
                 var ui = GetComponentInParent<BuilderUI>(); //select this button and deselct the old one
-                if (ui != null) ui.SetSelectedItem(this); //select the current item (green border)
+                if (ui != null) ui.SetSelectedItem(this,true); //select the current item (green border)
                     else Debug.LogError("Missing Builder UI to deselect old button");
                 }
                 );

@@ -22,6 +22,18 @@ public class ExternalCalls : MonoBehaviour {
     bool placeForward = false;
     bool snapRotation = true;
 
+    private void Start()
+    {
+        //subscribe to events
+        op.OnGhostObjectCreation += () => { Debug.Log("Created ghost"); };
+        op.OnGhostObjectDestroy += () => { Debug.Log("Deleted ghost"); };
+        op.OnGhostObjectPlace += () => { Debug.Log("Placed Item"); };
+
+        os.OnItemSelect += (int i) => { Debug.Log("Selected: " + i); };
+        os.OnMenuToggle += (bool val) => { Debug.Log("Selection menu is active: " + val); };
+        os.OnMenuCollapse += (bool val) => { Debug.Log("Selection menu is collapsed: " + val); };
+    }
+
     public void ToggleOP()
     {
         op.Toggle();
@@ -75,6 +87,7 @@ public class ExternalCalls : MonoBehaviour {
         }
     }
 
+    //create the ui buttons
     private void OnGUI()
     {
         if (!hide)
