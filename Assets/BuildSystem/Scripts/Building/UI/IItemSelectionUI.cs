@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace BuildSystem
+﻿namespace BuildSystem
 {
     /// <summary>
     /// Object Selection UI inetface. Implement this interface to create a custom selection UI

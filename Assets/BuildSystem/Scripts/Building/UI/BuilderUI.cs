@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace BuildSystem
@@ -45,6 +44,8 @@ namespace BuildSystem
         GridLayoutGroup grid;
 
         int columns = 5;
+
+        ObjectSelector selector;
 
         /****************************************************
         * initialization
@@ -130,7 +131,11 @@ namespace BuildSystem
             itemToHightlight.Select(true);
             selectedObject = itemToHightlight;
 
-            if (collapseAfterSelect && canCollapse) CollapseMenu();
+            if (collapseAfterSelect && canCollapse)
+            {
+                CollapseMenu();
+                selector.CastOnCollapseEvent(true);
+            }
 
         }
 
@@ -146,6 +151,7 @@ namespace BuildSystem
         /// <param name="selector">Object Selector Script referenct for callbacks</param>
         public void Populatemenu(BuildItemContainer container, ObjectSelector selector)
         {
+            this.selector = selector;
 
             for (int i = 0; i < container.items.Count; i++)
             {
