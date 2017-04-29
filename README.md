@@ -39,8 +39,9 @@
 
 ## Documentation
 
-[Manual] (https://rickycorte.github.io/BuildSystem/manual/index.html)
-[API Reference] (https://rickycorte.github.io/BuildSystem/docs/index.html)
+Manual (https://rickycorte.github.io/BuildSystem/manual/index.html)
+
+API Reference (https://rickycorte.github.io/BuildSystem/docs/index.html)
 
 A offline copy of the documentation is included in the package.
 
