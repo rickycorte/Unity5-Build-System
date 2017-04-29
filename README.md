@@ -1,6 +1,6 @@
 # Build System
 
-![Logo] (https://www.assetstore.unity3d.com/images/bg796x389.gif)
+![Logo](https://d2ujflorbtfzji.cloudfront.net/package-screenshot/89490ebf-57f8-4196-93a0-23b7d5496d0c_scaled.jpg)
 
 ## Core Features
 
@@ -39,9 +39,10 @@
 
 ## Documentation
 
-* [Manual] (https://rickycorte.github.io/BuildSystem/manual/index.html)
-* [API Reference] (https://rickycorte.github.io/BuildSystem/docs/index.html)
-* Offline documentation included
+[Manual] (https://rickycorte.github.io/BuildSystem/manual/index.html)
+[API Reference] (https://rickycorte.github.io/BuildSystem/docs/index.html)
+
+A offline copy of the documentation is included in the package.
 
 ## Download
 
@@ -50,5 +51,3 @@
 You can also download the leatest version in the release folder.
 
 If you like this asset please support me with 5 stars on the asset store and also a review.
-
-## Support
