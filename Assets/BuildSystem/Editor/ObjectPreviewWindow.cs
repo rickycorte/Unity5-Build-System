@@ -19,7 +19,7 @@ namespace BuildSystem
         static int VerticalSize = 510;
         int TextureMargin = 5;
 
-        [MenuItem("Builder System/Create Object Preview")]
+        [MenuItem("Build System/Create Object Preview")]
         public static void ShowWindow()
         {
            //create a windows with a fixed size

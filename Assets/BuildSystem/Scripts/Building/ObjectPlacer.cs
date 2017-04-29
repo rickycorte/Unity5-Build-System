@@ -29,8 +29,10 @@ namespace BuildSystem
         [Tooltip("Layers that this script will use to get hit points to place objects")]
         [SerializeField] LayerMask groundLayer;
 
+        [Tooltip("Max distance from camera where you can place objects")]
         [SerializeField] float maxPlaceDistance = 10f;
 
+        [Tooltip("Reccomned for FPS games")]
         [SerializeField] bool placeInScreenCenter = false;
 
         //**********************************************************************************************
@@ -39,6 +41,7 @@ namespace BuildSystem
         [Tooltip("Face the object to the player, THIS BLOCKS SNAP ROTATION!")]
         [SerializeField] bool faceMe = false;
 
+        [Tooltip("Amount of degrees that will be added to rotate ghost object")]
         [SerializeField] float snapRotationAngle = 45;
 
         //**********************************************************************************************

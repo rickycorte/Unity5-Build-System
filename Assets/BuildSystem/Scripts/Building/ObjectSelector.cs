@@ -2,7 +2,9 @@
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// Object selection menu handler
+    /// </summary>
     [RequireComponent(typeof(ObjectPlacer))]
     public class ObjectSelector : MonoBehaviour
     {
@@ -141,7 +143,6 @@ namespace BuildSystem
             if (Input.GetKeyDown(CollapseMenuKey) && isActive && isOpen)
             {
                 if (builderUI != null) builderUI.CollapseMenu();
-                if (OnMenuCollapse != null) OnMenuCollapse(builderUI.isCollapsed());
             }
         }
 
@@ -180,7 +181,6 @@ namespace BuildSystem
             if (builderUI != null)
             {
                 builderUI.ToggleMenu();
-                if (OnMenuCollapse != null) OnMenuCollapse(isOpen);
             }
             else Debug.LogError("Missing UI for ObjectSelector!");
         }
@@ -194,14 +194,12 @@ namespace BuildSystem
             if (builderUI != null)
             {
                 builderUI.ToggleMenu(val);
-                if (OnMenuCollapse != null) OnMenuCollapse(isOpen);
             }
             else Debug.LogError("Missing UI for ObjectSelector!");
         }
 
         /// <summary>
-        /// Call this function from UI to inform this script that a external collapse happened (Like auto-collapse)
-        /// Call this at your own risk
+        /// Call this function from UI to inform this script that a collapse has happened
         /// </summary>
         /// <param name="val"></param>
         public void CastOnCollapseEvent(bool val)

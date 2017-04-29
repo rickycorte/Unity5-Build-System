@@ -2,7 +2,9 @@
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// Basic player controller inclued in the package.
+    /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour
     {

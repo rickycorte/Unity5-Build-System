@@ -102,7 +102,7 @@ namespace BuildSystem
             anim.SetBool("isOpen", val);
             cv.interactable = val;
             cv.blocksRaycasts = val;
-            SetIsCollapsed(false);
+            SetIsCollapsed(false,!val);
         }
 
 
@@ -117,13 +117,14 @@ namespace BuildSystem
         public void CollapseMenu()
         {
             isMenuCollapsed = !isMenuCollapsed;
-            SetIsCollapsed(isMenuCollapsed);
+            SetIsCollapsed(isMenuCollapsed,isMenuCollapsed);           
         }
 
         /// <summary>
         /// Highlight the selected item and deselect the current one
         /// </summary>
         /// <param name="itemToHightlight">Item to highlight</param>
+        /// <param name="canCollapse">Can auto-collapse on click</param>
         public void SetSelectedItem(BuilderObjectUI itemToHightlight, bool canCollapse = false)
         {
             if (selectedObject != null) selectedObject.Select(false);
@@ -133,8 +134,7 @@ namespace BuildSystem
 
             if (collapseAfterSelect && canCollapse)
             {
-                CollapseMenu();
-                selector.CastOnCollapseEvent(true);
+                CollapseMenu();              
             }
 
         }
@@ -174,12 +174,14 @@ namespace BuildSystem
         /// <summary>
         /// Collapse the menu without disabling it
         /// </summary>
-        /// <param name="val">Collapese state</param>
-        void SetIsCollapsed(bool val)
+        /// <param name="val">Collapese state</para>
+        /// <param name="callbackEventValue">Value passed to the selector for event</param>
+        void SetIsCollapsed(bool val,bool callbackEventValue)
         {
             isMenuCollapsed = val;
             anim.SetBool("isCollapsed", val);
             if (CollapseMenuButtonText != null) CollapseMenuButtonText.text = (val) ? ">>" : "<<";
+            selector.CastOnCollapseEvent(callbackEventValue);
         }
 
         /// <summary>
