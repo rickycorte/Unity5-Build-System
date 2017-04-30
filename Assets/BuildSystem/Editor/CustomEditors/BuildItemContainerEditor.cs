@@ -39,6 +39,11 @@ public class BuildItemContainerEditor : Editor {
     public override void OnInspectorGUI()
     {
         reorderList.DoLayoutList();
+
+        if (GUILayout.Button("Regenerate all ghosts"))
+        {
+            GenerateAllGhostsInList();
+        }
     }
 
     /// <summary>
@@ -109,6 +114,20 @@ public class BuildItemContainerEditor : Editor {
     {
         myListBlock.items.RemoveAt(index);
         EditorUtility.SetDirty(target);
+    }
+
+    /// <summary>
+    /// Force ghost regeneration of every object in list
+    /// </summary>
+    void GenerateAllGhostsInList()
+    {
+        for (int i = 0; i < myListBlock.items.Count; i++)
+        {
+            EditorUtility.DisplayProgressBar("Processing", "Generating ghosts: " + (i + 1) + "/" + myListBlock.items.Count, (float)i + 1 / (float)myListBlock.items.Count);
+            myListBlock.items[i].CreateGhost();           
+        }
+
+        EditorUtility.ClearProgressBar();
     }
 
 }

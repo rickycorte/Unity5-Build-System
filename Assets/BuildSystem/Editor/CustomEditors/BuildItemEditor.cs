@@ -17,7 +17,14 @@ public class BuildItemEditor : Editor {
         obj.Name = EditorGUILayout.TextField(obj.Name);
 
         EditorGUILayout.LabelField("Prefab To Spawn:");
-        obj.Prefab = (GameObject)EditorGUILayout.ObjectField("", obj.Prefab, typeof(GameObject), false);
+        var temp = (GameObject)EditorGUILayout.ObjectField("", obj.Prefab, typeof(GameObject), false);
+
+        //check if prefab has changed
+        if (temp != obj.Prefab)
+        {
+            obj.Prefab = temp;
+            obj.CreateGhost();
+        }
 
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.PrefixLabel("Sprite To Show In UI:");
@@ -29,9 +36,16 @@ public class BuildItemEditor : Editor {
         EditorGUILayout.HelpBox("Complex Mesh indicate that the prefab is composed by multiple Meshes.\n"
             +"Note: ObjectPlacer will use the first MeshRenderer to align and place the prefab on the surface",MessageType.Info);
         EditorGUILayout.BeginHorizontal();
+
         EditorGUILayout.LabelField("isComplexMesh: ");
         obj.isComplexMesh = EditorGUILayout.Toggle(obj.isComplexMesh);
         EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.Space();
+
+        EditorGUILayout.LabelField("Ghost material:");
+        EditorGUILayout.HelpBox("If you don't want to set ghost material for every object that you create, use the tool under Build System menu", MessageType.Info);
+        obj.ghostMaterial = (Material)EditorGUILayout.ObjectField("", obj.ghostMaterial, typeof(Material), false);
 
         EditorUtility.SetDirty(target);
 
