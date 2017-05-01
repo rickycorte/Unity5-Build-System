@@ -6,6 +6,7 @@ namespace BuildSystem
     /// <summary>
     /// Helper class used to create complex ghost objects (Multiple mesh renderers)
     /// </summary>
+    [System.Obsolete("This class is no longer used in Build System")]
     public class ComplexGhostCreator : MonoBehaviour
     {
 

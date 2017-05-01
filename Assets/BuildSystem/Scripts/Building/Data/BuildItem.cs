@@ -47,7 +47,7 @@ namespace BuildSystem
 
             if (ghostCache == null)
             {
-                Debug.LogError("item: "+ name +" is no cached ghost plese regenerate it");
+                Debug.LogError("item: "+ name +" has no cached ghost please regenerate it");
             }
 
             return true;
@@ -74,10 +74,14 @@ namespace BuildSystem
             ReplaceMaterials(g);
 
             //save the prefab in cache folder
-            ghostCache = PrefabUtility.CreatePrefab(cachePath +"/"+ ( (name == "") ? Prefab.name + "_ghost" : name + "_ghost" )+ ".prefab", g);
+            ghostCache = PrefabUtility.CreatePrefab(cachePath +"/"+ Prefab.name + "_ghost.prefab", g);
 
             //delete the copy
             DestroyImmediate(g);
+
+            //save new reference
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
 
         }
 

@@ -58,6 +58,7 @@ namespace BuildSystem
                 {
                     bi.ghostMaterial = mat;
                     //save changes
+                    EditorUtility.SetDirty(bi);
                     AssetDatabase.SaveAssets();
 
                     //create the ghost with the new material
