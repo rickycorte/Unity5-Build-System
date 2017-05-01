@@ -11,7 +11,7 @@ namespace BuildSystem
     {
 
         GameObject obj;
-        string savePath = "Assets/Data/Previews";
+        string savePath = "Assets/BuildSystem/Data/Previews";
 
         Texture2D currentPreview;
 

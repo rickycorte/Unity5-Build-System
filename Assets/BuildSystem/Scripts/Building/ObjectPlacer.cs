@@ -17,9 +17,6 @@ namespace BuildSystem
         [Tooltip("Fill this only if you don't use ObjectSelector!")]
         [SerializeField] BuildItem objectToPlace;
 
-        [Tooltip("This material will be applied to the object when it is not placed!")]
-        [SerializeField] Material ghostMaterial;
-
         //**********************************************************************************************
         [Header("Place Settings")]
 
@@ -114,7 +111,6 @@ namespace BuildSystem
                 cam = Camera.main;
             myTransform = transform;
 
-            if (ghostMaterial == null) Debug.LogWarning("Missing ghostMaterial, ignore this warning if you don't want to use it.");
             if (cam == null) Debug.LogError("Missing cam, please assign it!");
         }
 
@@ -486,36 +482,6 @@ namespace BuildSystem
             CreateGhostObject();
         }
 
-
-        /// <summary>
-        /// [OBSOLETE] Set a object to place without using ScriptableObjects
-        /// </summary>
-        /// <param name="prefab">Prefab to spawn</param>
-        /// <param name="isComplexMesh">Require complex mesh computation</param>
-        [System.Obsolete("This function has been removed, plese use the overloaded version")]
-        public void SetObjcetToPlace(GameObject prefab, bool isComplexMesh = false)
-        {
-            Debug.LogWarning("This function has been removed, plese use the overloaded version with BuildItem as input");
-        }
-
-        /// <summary>
-        /// [OBSOLETE] Set a object to place without using ScriptableObjects, and then create its ghost
-        /// </summary>
-        /// <param name="prefab">Prefab to spawn</param>
-        /// <param name="isComplexMesh">Require complex mesh computation</param>
-        [System.Obsolete("This function has been removed, plese use the overloaded version")]
-        public void SetObjectToPlaceAndCreateGhost(GameObject prefab, bool isComplexMesh = false)
-        {
-            if (prefab == null)
-            {
-                Debug.LogError("Null prefab!");
-                return;
-            }
-            SetObjcetToPlace(prefab, isComplexMesh);
-            CreateGhostObject();
-        }
-
-
         /****************************************************
         * External Setup Misc
         * *************************************************/
@@ -570,15 +536,6 @@ namespace BuildSystem
         public void SetSnapAngle(float angle)
         {
             snapRotationAngle = angle;
-        }
-
-        /// <summary>
-        /// Set the ghost material
-        /// </summary>
-        /// <param name="newGhostMaterial">material to use</param>
-        public void SetGhostMaterial(Material newGhostMaterial)
-        {
-            ghostMaterial = newGhostMaterial;
         }
 
 

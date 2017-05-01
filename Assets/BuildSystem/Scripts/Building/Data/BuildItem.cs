@@ -16,13 +16,7 @@ namespace BuildSystem
         public string Name = "No Name";
         public Sprite UiPicture;
         public GameObject Prefab;
-
-        [System.Obsolete("This option no longer impact placer behaviuor")]
-        public bool isComplexMesh = false;
-
         public GameObject ghostCache;
-
-        const string cachePath = "Assets/BuildSystem/Cache";
 
         /// <summary>
         /// Check if a Build Item is valid or not
@@ -55,6 +49,7 @@ namespace BuildSystem
 
 #if UNITY_EDITOR
 
+        const string cachePath = "Assets/BuildSystem/Cache";
 
         public Material ghostMaterial;
 

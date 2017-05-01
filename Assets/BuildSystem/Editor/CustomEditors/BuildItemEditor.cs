@@ -33,19 +33,14 @@ public class BuildItemEditor : Editor {
 
         EditorGUILayout.Space();
 
-        EditorGUILayout.HelpBox("Complex Mesh indicate that the prefab is composed by multiple Meshes.\n"
-            +"Note: ObjectPlacer will use the first MeshRenderer to align and place the prefab on the surface",MessageType.Info);
-        EditorGUILayout.BeginHorizontal();
-
-        EditorGUILayout.LabelField("isComplexMesh: ");
-        obj.isComplexMesh = EditorGUILayout.Toggle(obj.isComplexMesh);
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.Space();
-
         EditorGUILayout.LabelField("Ghost material:");
         EditorGUILayout.HelpBox("If you don't want to set ghost material for every object that you create, use the tool under Build System menu", MessageType.Info);
-        obj.ghostMaterial = (Material)EditorGUILayout.ObjectField("", obj.ghostMaterial, typeof(Material), false);
+        var mat = (Material)EditorGUILayout.ObjectField("", obj.ghostMaterial, typeof(Material), false);
+        if (obj.ghostMaterial != mat)
+        {
+            obj.ghostMaterial = mat;
+            obj.CreateGhost();
+        }
 
         EditorUtility.SetDirty(target);
 
