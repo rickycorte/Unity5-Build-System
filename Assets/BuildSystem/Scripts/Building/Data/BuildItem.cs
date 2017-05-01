@@ -20,7 +20,7 @@ namespace BuildSystem
         [System.Obsolete("This option no longer impact placer behaviuor")]
         public bool isComplexMesh = false;
 
-        GameObject ghostCache;
+        public GameObject ghostCache;
 
         const string cachePath = "Assets/BuildSystem/Cache";
 

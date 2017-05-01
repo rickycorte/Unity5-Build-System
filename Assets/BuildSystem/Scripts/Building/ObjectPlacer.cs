@@ -15,7 +15,7 @@ namespace BuildSystem
         [Header("Object Settings")]
 
         [Tooltip("Fill this only if you don't use ObjectSelector!")]
-        [SerializeField] GameObject objectToPlace;
+        [SerializeField] BuildItem objectToPlace;
 
         [Tooltip("This material will be applied to the object when it is not placed!")]
         [SerializeField] Material ghostMaterial;
@@ -94,29 +94,15 @@ namespace BuildSystem
         float objectSnapCurrentRotaion = 0;
 
         //object pivot
-        float pivotMargin;
         bool usingFakePivot = false;
-        Vector3 pivotOffsetExtra;
-
-        //old prefab state
-        bool[] bodiesPrevState;
-        UnityEngine.Rendering.ShadowCastingMode oldShadowState;
-
-        //Mesh Type
-        bool useCompleMesh = false;
-
 
         /****************************************************
         * Components & references
         * *************************************************/
 
         Transform ghostObjInstance;
-        MeshRenderer ghostRenderer;
 
-        Material[] oldMaterials;
         Transform myTransform;
-
-        ComplexGhostCreator complexGhostCreator;
 
         /****************************************************
         * Init
@@ -230,45 +216,26 @@ namespace BuildSystem
 
             if (objectToPlace == null)
             {
-                Debug.LogError("No prefab to instantiate! Aborting ghost creation.");
+                Debug.LogError("No item to instantiate! Aborting ghost creation.");
                 return;
             }
-            ghostObjInstance = Instantiate(objectToPlace, myTransform.position, Quaternion.identity).GetComponent<Transform>();
-
-            //get the root renderer (first one is considered root)
-            ghostRenderer = ghostObjInstance.GetComponentInChildren<MeshRenderer>();
-
-            if (ghostRenderer == null)
-            {
-                Debug.LogError("Object: " + objectToPlace + " has no mesh renderers! Aborting ghost creation.");
-                Destroy(ghostObjInstance);
-                return;
-            }
-
-            EnableGhostMaterials(ghostRenderer);
-
-            //replace materials with ghost
-            EnableGhostShadows(false);
-            if (useCompleMesh)
-                complexGhostCreator.CreateComplexGhost(ghostObjInstance, ghostMaterial);
-
-            //remove collisions and physics
-            EnableObjectCollision(ghostObjInstance,false);
-            EnableGhostObjRigidbodies(false);
+      
+            ghostObjInstance = Instantiate(objectToPlace.ghostCache, myTransform.position, Quaternion.identity).GetComponent<Transform>();
 
             //reset old object rotation
             objectSnapCurrentRotaion = 0;
 
             //check where is the pivot, if it is not in the base create a fake one
             usingFakePivot = false;
-            pivotMargin = ghostRenderer.bounds.extents.y * 2 / 3; //set the base pivot margin. its' height must be lower than obj center * 2/3
+            
 
-            bool objPivotIsBase = CheckIfObjectPivotIsCenter(ghostObjInstance,ghostRenderer, out pivotOffsetExtra);
+            Vector3 pivotOffsetExtra;
+            bool objPivotIsBase = isPivotInBase(ghostObjInstance, out pivotOffsetExtra);
 
             //create a fake pivot if the real one is not in base
             if (!objPivotIsBase)
             {
-                ghostObjInstance = CreateBasePivot(ghostObjInstance, ghostRenderer,pivotOffsetExtra);
+                ghostObjInstance = CreateBasePivot(ghostObjInstance, pivotOffsetExtra);
                 usingFakePivot = true;
             }
 
@@ -319,22 +286,18 @@ namespace BuildSystem
         {
             if (ghostObjInstance != null)
             {
-                //reset old materials
-                if (useCompleMesh) complexGhostCreator.RemoveComplexGhost();
-                EnableGhostMaterials(false);
-
-                EnableGhostObjRigidbodies(true); //reset rigidbody state
-                EnableObjectCollision(ghostObjInstance, true); //reset collisions
-                EnableGhostShadows(true); //reset old shadow state
 
                 Debug.Log("Created: " + ghostObjInstance.name);
 
                 if (usingFakePivot) // remove fake pivot if using one
                 {
-                    ghostObjInstance.GetComponent<PivotHelper>().DeletePivot();
-                }               
+                    ghostObjInstance = ghostObjInstance.GetComponent<PivotHelper>().DeletePivot();
+                }
 
-                ghostObjInstance = null; //leave the object in the scene
+                //place real object in scene
+                Instantiate(objectToPlace.Prefab, ghostObjInstance.position, ghostObjInstance.rotation);
+
+                Destroy(ghostObjInstance.gameObject);
 
                 if (OnGhostObjectPlace != null)
                 {
@@ -355,7 +318,6 @@ namespace BuildSystem
             if (ghostObjInstance != null)
             {
                 Destroy(ghostObjInstance.gameObject);
-                if (complexGhostCreator != null) complexGhostCreator.ClearCache();
 
                 if (OnGhostObjectDestroy != null)
                 {
@@ -366,7 +328,7 @@ namespace BuildSystem
 
 
         /****************************************************
-        * Ghost Object Alignament & Rotation
+        * Ghost Object Alignament 
         * *************************************************/
 
         /// <summary>
@@ -382,69 +344,10 @@ namespace BuildSystem
 
         }
 
-        /// <summary>
-        /// Check if the object pivot is in center or not.
-        /// This function returns the pivot Offset (can be Vector3.zero)
-        /// </summary>
-        /// <param name="item">Item to use</param>
-        /// <param name="renderer">Renderer attached to the item</param>
-        /// <param name="pivotOffset">Offset of the pivot to be in base</param>
-        /// <returns></returns>
-        bool CheckIfObjectPivotIsCenter(Transform item, MeshRenderer renderer, out Vector3 pivotOffset)
-        {
-            if (renderer == null)
-            {
-                Debug.LogError("No ghost renderer!");
-                pivotOffset = Vector3.zero;
-                return false;
-            }
 
-            Vector3 delta = item.position - renderer.bounds.center;
-            if (delta.magnitude >= pivotMargin && delta.y < 0) //delta.y < 0 fix issues that not centerd pivots above the object center were taken as base pivots
-            {
-                pivotOffset = Vector3.zero;
-                return true;
-            }
-            else
-            {
-                pivotOffset = delta; // save pivot delta to use to create a fake pivot
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Create a pivot parent to better place the object
-        /// </summary>
-        /// <param name="item">Item to use</param>
-        /// <param name="renderer">Renderer of the item</param>
-        /// <param name="pivotOffset">Offset of the pivot</param>
-        /// <returns></returns>
-        Transform CreateBasePivot(Transform item,MeshRenderer renderer, Vector3 pivotOffset)
-        {
-            if (item == null || renderer == null)
-            {
-                Debug.LogError("CreateBasePivot can't have null parameters!");
-            }
-
-            GameObject pivotG = new GameObject("Temp_Ghost_Pivot_Parent"); // create parent
-            Transform pivotT = pivotG.transform;
-
-            pivotG.AddComponent<PivotHelper>(); // add helper class to remove the pivot when object is spawned
-
-            //get mesh center
-            Vector3 meshCenter = renderer.bounds.extents;
-            // apply pivot delta
-            meshCenter.x = pivotOffset.x;
-            meshCenter.z = pivotOffset.z;
-            meshCenter.y += pivotOffset.y; 
-
-
-            item.SetParent(pivotT); // set the current object as parent
-            item.localPosition = meshCenter; // move the object and leave the parent object in the pivot position
-
-            return pivotT;
-        }
-
+        /****************************************************
+        * Ghost Object Rotation
+        * *************************************************/
 
         /// <summary>
         /// Rotate ghost object to face the placer
@@ -452,9 +355,9 @@ namespace BuildSystem
         /// <param name="target">Object placer</param>
         /// <param name="other">Item to rotate</param>
         /// <returns></returns>
-        float GetFaceToRotation(Transform target,Transform other)
+        float GetFaceToRotation(Transform target, Transform other)
         {
-            if (objectToPlace == null || ghostRenderer)
+            if (target == null || other == null)
                 Debug.LogError("GetFaceToRotaion can't have null parameters");
 
             Vector3 dir = target.position - other.position;
@@ -470,146 +373,87 @@ namespace BuildSystem
             objectSnapCurrentRotaion += mult * snapRotationAngle;
         }
 
+
         /****************************************************
-        * Ghost Object properties modifiers
+        * Pivot helpers
         * *************************************************/
 
         /// <summary>
-        /// Active/Reset shadow preset of renderer
-        /// </summary>
-        /// <param name="val">Active shadows</param>
-        void EnableGhostShadows(bool val)
-        {
-            if (!val)
-            {
-                oldShadowState = ghostRenderer.shadowCastingMode;
-                ghostRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            }
-            else
-            {
-                ghostRenderer.shadowCastingMode = oldShadowState;
-            }
-
-        }
-
-        /// <summary>
-        /// Toggle ghost colliders
+        /// Create a pivot parent to better place the object
         /// </summary>
         /// <param name="item">Item to use</param>
-        /// <param name="val">Active colliders</param>
-        void EnableObjectCollision(Transform item ,bool val)
-        {
-            if (item == null) return;
-
-            var cols = item.GetComponentsInChildren<Collider>();
-            for (int i = 0; i < cols.Length; i++)
-            {
-                cols[i].enabled = val;
-            }
-        }
-
-
-        /// <summary>
-        /// Set all rigidbodies to be kinematic or reset them with previous state
-        /// </summary>
-        /// <param name="val">Active rigidbodies</param>
-        void EnableGhostObjRigidbodies(bool val)
-        {
-            //get all bodies
-            var bodies = ghostObjInstance.GetComponentsInChildren<Rigidbody>();
-
-            if (val == false)
-            {
-                GetOldRigidBodyStateAndOvverride(val, bodies);
-            }
-            else
-            {
-                SetOldRigidbodyState(bodies);
-            }
-
-        }
-
-        /// <summary>
-        /// Save the old state for the body reset
-        /// </summary>
-        /// <param name="val">New kinematic value</param>
-        /// <param name="bodies">List of rigidbodies to use</param>
-        void GetOldRigidBodyStateAndOvverride(bool val, Rigidbody[] bodies)
-        {
-            bodiesPrevState = new bool[bodies.Length];
-
-            for (int i = 0; i < bodies.Length; i++)
-            {
-                bodiesPrevState[i] = bodies[i].isKinematic;
-                bodies[i].isKinematic = !val;
-            }
-        }
-
-        /// <summary>
-        /// Set the old rigidbodies state
-        /// </summary>
-        /// <param name="bodies"></param>
-        void SetOldRigidbodyState(Rigidbody[] bodies)
-        {
-            for (int i = 0; i < bodies.Length; i++)
-            {
-                bodies[i].isKinematic = bodiesPrevState[i];
-            }
-        }
-
-
-        /// <summary>
-        /// Set all materials to ghost and store the old ones.
-        /// If ghostMaterial is null, no operation is performed
-        /// </summary>
-        /// <param name="val">Use ghost material</param>
-        void EnableGhostMaterials(bool val)
-        {
-            if (ghostRenderer == null) return;
-            if (ghostMaterial == null) return; //don't perform operation if ghost material is not assigned
-
-            if (val)
-            {
-                oldMaterials = ghostRenderer.materials;
-                ghostRenderer.materials = CreateGhostMaterialArray(ghostRenderer.materials.Length);
-            }
-            else
-            {
-                ghostRenderer.materials = oldMaterials;
-            }
-        }
-
-        /// <summary>
-        /// Create a list of ghost materials to apply
-        /// </summary>
-        /// <param name="lenght">Arry lenght</param>
+        /// <param name="renderer">Renderer of the item</param>
+        /// <param name="pivotOffset">Offset of the pivot</param>
         /// <returns></returns>
-        Material[] CreateGhostMaterialArray(int lenght)
+        Transform CreateBasePivot(Transform item, Vector3 pivotOffset)
         {
-            Material[] ghosts = new Material[lenght];
-            for (int i = 0; i < ghosts.Length; i++)
+            var normMesh = item.GetComponentInChildren<MeshRenderer>();
+            var skinMesh = item.GetComponentInChildren<SkinnedMeshRenderer>();
+
+            if (normMesh  == null && skinMesh == null)
             {
-                ghosts[i] = ghostMaterial;
+                Debug.LogError("No renderers found!");
+                return null;
             }
-            return ghosts;
+
+            GameObject pivotG = new GameObject("Temp_Ghost_Pivot_Parent"); // create parent
+            Transform pivotT = pivotG.transform;
+
+            pivotG.AddComponent<PivotHelper>(); // add helper class to remove the pivot when object is spawned
+
+            //get mesh center
+            Vector3 meshCenter = (normMesh != null) ? normMesh.bounds.extents : skinMesh.bounds.extents;
+            // apply pivot delta
+            meshCenter.x = pivotOffset.x;
+            meshCenter.z = pivotOffset.z;
+            meshCenter.y += pivotOffset.y; 
+
+
+            item.SetParent(pivotT); // set the current object as parent
+            item.localPosition = meshCenter; // move the object and leave the parent object in the pivot position
+
+            return pivotT;
         }
 
+        /// <summary>
+        /// Check if the object pivot is in center or not.
+        /// This function returns the pivot Offset (can be Vector3.zero)
+        /// </summary>
+        /// <param name="item">Item to use</param>
+        /// <param name="renderer">Renderer attached to the item</param>
+        /// <param name="pivotOffset">Offset of the pivot to be in base</param>
+        /// <returns></returns>
+        bool isPivotInBase(Transform item, out Vector3 pivotOffset)
+        {
+            var normMesh = item.GetComponentInChildren<MeshRenderer>();
+            var skinMesh = item.GetComponentInChildren<SkinnedMeshRenderer>();
+
+            if (normMesh == null && skinMesh == null)
+            {
+                Debug.LogError("No mesh renderer found!");
+                pivotOffset = Vector3.zero;
+                return false;
+            }
+
+            var pivotMargin = (normMesh != null)? normMesh.bounds.extents.y * 2 / 3 : skinMesh.bounds.extents.y * 2 / 3 ; //set the base pivot margin. 
+            //Its' height must be lower than obj center * 2/3
+
+            Vector3 delta = item.position - ( (normMesh != null)? normMesh.bounds.center : skinMesh.bounds.center);
+            if (delta.magnitude >= pivotMargin && delta.y < 0) //delta.y < 0 fix issues that not centerd pivots above the object center were taken as base pivots
+            {
+                pivotOffset = Vector3.zero;
+                return true;
+            }
+            else
+            {
+                pivotOffset = delta; // save pivot delta to use to create a fake pivot
+                return false;
+            }
+        }
 
         /****************************************************
         * External Prafab Setup
         * *************************************************/
-
-        /// <summary>
-        /// Add complex mesh handler if it's required
-        /// </summary>
-        void AddComplexGhostGenerator()
-        {
-            if (useCompleMesh)
-            {
-                if (complexGhostCreator == null)
-                    complexGhostCreator = gameObject.AddComponent<ComplexGhostCreator>();
-            }
-        }
 
         /// <summary>
         /// Set the prefab to spawn, no ghost is created
@@ -623,10 +467,7 @@ namespace BuildSystem
                 return;
             }
 
-            objectToPlace = item.Prefab;
-            useCompleMesh = item.isComplexMesh;
-
-            AddComplexGhostGenerator();
+            objectToPlace = item;
         }
 
         /// <summary>
@@ -647,28 +488,22 @@ namespace BuildSystem
 
 
         /// <summary>
-        /// Set a object to place without using ScriptableObjects
+        /// [OBSOLETE] Set a object to place without using ScriptableObjects
         /// </summary>
         /// <param name="prefab">Prefab to spawn</param>
         /// <param name="isComplexMesh">Require complex mesh computation</param>
+        [System.Obsolete("This function has been removed, plese use the overloaded version")]
         public void SetObjcetToPlace(GameObject prefab, bool isComplexMesh = false)
         {
-            if (prefab == null)
-            {
-                Debug.LogError("Null prefab!");
-                return;
-            }
-            objectToPlace = prefab;
-            useCompleMesh = isComplexMesh;
-
-            AddComplexGhostGenerator();
+            Debug.LogWarning("This function has been removed, plese use the overloaded version with BuildItem as input");
         }
 
         /// <summary>
-        /// Set a object to place without using ScriptableObjects, and then create its ghost
+        /// [OBSOLETE] Set a object to place without using ScriptableObjects, and then create its ghost
         /// </summary>
         /// <param name="prefab">Prefab to spawn</param>
         /// <param name="isComplexMesh">Require complex mesh computation</param>
+        [System.Obsolete("This function has been removed, plese use the overloaded version")]
         public void SetObjectToPlaceAndCreateGhost(GameObject prefab, bool isComplexMesh = false)
         {
             if (prefab == null)

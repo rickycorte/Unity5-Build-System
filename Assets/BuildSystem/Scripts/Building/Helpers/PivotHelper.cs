@@ -11,11 +11,13 @@ namespace BuildSystem
         /// <summary>
         /// Remove the fake pivot and leave the original object in the scene
         /// </summary>
-        public void DeletePivot()
+        public Transform DeletePivot()
         {
             Transform t = GetComponentsInChildren<Transform>()[1];
             t.parent = null;
-            Destroy(this.gameObject);
+            Destroy(this.gameObject,0.1f); // delay self destroy to make sure return runs
+
+            return t;
         }
 
     }
