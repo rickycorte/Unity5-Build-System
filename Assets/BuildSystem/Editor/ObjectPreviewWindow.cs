@@ -5,7 +5,7 @@ using System.IO;
 namespace BuildSystem
 {
     /// <summary>
-    /// Helper window that creates png previews of prefabs in low resolution using Unity asset preview
+    /// [EDITOR ONLY] Helper window that creates png previews of prefabs in low resolution using Unity asset preview
     /// </summary>
     public class ObjectPreviewWindow : EditorWindow
     {

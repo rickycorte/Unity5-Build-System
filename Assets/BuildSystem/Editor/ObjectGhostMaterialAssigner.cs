@@ -4,7 +4,9 @@ using UnityEditor;
 
 namespace BuildSystem
 {
-
+    /// <summary>
+    /// [EDITOR ONLY] Material assigner window
+    /// </summary>
     public class ObjectGhostMaterialAssigner : EditorWindow
     {
         static int HorizontalSize = 300;

@@ -4,6 +4,7 @@
 /[Tt]emp/
 /[Oo]bj/
 /[Bb]uild/
+/Doxygen/
 
 /Assets/AssetStoreTools/
 /Assets/StudioNewPunch/
