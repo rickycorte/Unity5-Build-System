@@ -41,6 +41,9 @@ namespace BuildSystem
         [Tooltip("Amount of degrees that will be added to rotate ghost object")]
         [SerializeField] float snapRotationAngle = 45;
 
+        [Tooltip("Should the script reset obejct rotation to 0 or keep the previuos one. Note: works only with snap rotaion")]
+        [SerializeField] bool resetRotationAfterPlace = false;
+
         //**********************************************************************************************
         [Header("Input Settings")] 
 
@@ -219,7 +222,8 @@ namespace BuildSystem
             ghostObjInstance = Instantiate(objectToPlace.ghostCache, myTransform.position, Quaternion.identity).GetComponent<Transform>();
 
             //reset old object rotation
-            objectSnapCurrentRotaion = 0;
+            if (resetRotationAfterPlace)
+                objectSnapCurrentRotaion = 0;
 
             //check where is the pivot, if it is not in the base create a fake one
             usingFakePivot = false;

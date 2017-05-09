@@ -3,6 +3,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using System.IO;
+using System.Collections.Generic;
 #endif
 
 namespace BuildSystem
@@ -13,7 +14,7 @@ namespace BuildSystem
     [CreateAssetMenu(fileName = "BuildItem", menuName = "Building/Item", order = 1)]
     public class BuildItem : ScriptableObject
     {
-        public string Name = "No Name";
+        public string Name = "";
         public Sprite UiPicture;
         public GameObject Prefab;
         public GameObject ghostCache;
@@ -49,10 +50,13 @@ namespace BuildSystem
 
 #if UNITY_EDITOR
 
-        const string cachePath = "Assets/BuildSystem/Cache";
+        const string cachePath = "Assets/BuildSystem/Data/Cache";
 
         public Material ghostMaterial;
 
+        /// <summary>
+        /// [EDITOR ONLY] Create ghost object and save it to disk
+        /// </summary>
         public void CreateGhost()
         {
             DeleteOldGhost();
@@ -89,7 +93,7 @@ namespace BuildSystem
         }
 
         /// <summary>
-        /// Remove all components except rendering ones
+        /// [EDITOR ONLY] Remove all components except rendering ones
         /// </summary>
         /// <param name="g"></param>
         void RemoveAllExceptMeshes(GameObject g)
@@ -111,7 +115,7 @@ namespace BuildSystem
         }
 
         /// <summary>
-        /// Replace current materials with ghost one
+        /// [EDITOR ONLY] Replace current materials with ghost one
         /// </summary>
         void ReplaceMaterials(GameObject g)
         {
@@ -132,7 +136,7 @@ namespace BuildSystem
         }
 
         /// <summary>
-        /// Create an array of materials to replace the current ones
+        /// [EDITOR ONLY] Create an array of materials to replace the current ones
         /// </summary>
         Material[] createMarArr(int cout)
         {
@@ -147,7 +151,7 @@ namespace BuildSystem
 
 
         /// <summary>
-        /// Create check folder
+        /// [EDITOR ONLY] Create check folder
         /// </summary>
         void CreateFolder(string path)
         {
@@ -159,6 +163,71 @@ namespace BuildSystem
 
                 PrefabUtility.CreatePrefab(cachePath + "/_DONT_TOUCH_THIS_FOLDER.prefab", new GameObject());
             }
+        }
+
+        /// <summary>
+        /// [EDITOR ONLY] Gnerate an automatic name based on prefab name and assign it to item
+        /// </summary>
+        /// <param name="g">Object to use</param>
+        public void SetAutomaticName(GameObject g)
+        {
+            string res = g.name;
+
+            //search where there are upper letters with lower ones and put space there
+            List<int> breakPos = new List<int>();
+            //find parts line nP cR ...
+            for (int i = 1; i < res.Length; i++)
+            {
+                if (char.IsUpper(res[i]) && char.IsLower(res[i - 1])) // controllare sto coso che non va
+                {
+                    breakPos.Add(i);
+                }
+            }
+            //insert spaces
+            for (int i = 0; i < breakPos.Count; i++)
+            {
+                res = res.Insert(breakPos[i], " ");
+            }
+
+            res = res.Replace('_', ' ');
+
+            Name = res;
+
+            //save new reference
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            Debug.Log("Name set to: " + res);
+
+        }
+
+        /// <summary>
+        /// [EDITOR ONLY] Generate automatic preview and assign it to item
+        /// </summary>
+        /// <param name="g">Object to use for preview</param>
+        public void SetAutomaticPreview(GameObject g)
+        {
+            string path = ObjectPreview.CreateAndSaveAssetPreview(g);
+            if (path == "") return;
+
+            UiPicture = (Sprite)AssetDatabase.LoadAssetAtPath(path, typeof(Sprite));
+
+            //save new reference
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            Debug.Log("Preview Set to " + path );
+        }
+    
+        /// <summary>
+        /// [EDITOR ONLY] Set an automatic material to the item
+        /// </summary>
+        public void SetAutomaticMaterial()
+        {
+
+            ghostMaterial = (Material)AssetDatabase.LoadAssetAtPath("Assets/BuildSystem/Materials/GhostObjectMaterial.mat", typeof(Material));
+            //save new reference
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+            Debug.Log("Default Material set");
         }
 
 #endif

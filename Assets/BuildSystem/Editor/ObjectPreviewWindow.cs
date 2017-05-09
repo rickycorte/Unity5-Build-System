@@ -11,7 +11,6 @@ namespace BuildSystem
     {
 
         GameObject obj;
-        string savePath = "Assets/BuildSystem/Data/Previews";
 
         Texture2D currentPreview;
 
@@ -22,7 +21,7 @@ namespace BuildSystem
         [MenuItem("Build System/Create Object Preview")]
         public static void ShowWindow()
         {
-           //create a windows with a fixed size
+            //create a windows with a fixed size
             GetWindowWithRect(typeof(ObjectPreviewWindow), new Rect(Screen.width / 2, 200, HorizontalSize, VerticalSize), true, "Object Preview Generator");
         }
 
@@ -36,14 +35,14 @@ namespace BuildSystem
             obj = (GameObject)EditorGUILayout.ObjectField("Object:", obj, typeof(GameObject), false);
             if (obj != null) CreatePreview();
 
-            GUILayout.Label("Save path: " + savePath);
+            GUILayout.Label("Save path: " + ObjectPreview.savePath);
 
             GUILayout.Space(10);
 
             //button to create preview
             if (GUILayout.Button("Create Preview"))
             {
-                SavePreview();
+                ObjectPreview.CreateAndSaveAssetPreview(obj);
             }
             EditorGUILayout.HelpBox("If there just an asset with the same name, it will be overwriden!", MessageType.Warning);
 
@@ -56,30 +55,6 @@ namespace BuildSystem
 
 
         /// <summary>
-        /// Save the current preview to hdd
-        /// </summary>
-        void SavePreview()
-        {
-            if (currentPreview == null)
-            {
-                EditorUtility.DisplayDialog("Error", "First assign an object to create a preview!", "ok");
-                return;
-            }
-            CreteSaveFolder();
-
-            //encode to png and then save to assets
-            var bytes = currentPreview.EncodeToPNG();
-            string name = obj.name + ".png";
-            if (File.Exists(name)) File.Delete(name);
-            File.WriteAllBytes(savePath + "/" + name, bytes);
-            Debug.Log("Saved preview: " + name);
-
-            //refresh assets
-            AssetDatabase.Refresh();
-
-        }
-
-        /// <summary>
         /// Create the image preview
         /// </summary>
         void CreatePreview()
@@ -87,17 +62,8 @@ namespace BuildSystem
             currentPreview = AssetPreview.GetAssetPreview(obj);
         }
 
-        /// <summary>
-        /// Check if the save directory exitst. If no creates it
-        /// </summary>
-        void CreteSaveFolder()
-        {
-            if (!Directory.Exists(savePath))
-            {
-                Debug.Log("Created directory: "+savePath);
-                Directory.CreateDirectory(savePath);
-                AssetDatabase.Refresh();
-            }
-        }
+
+
+
     }
 }
