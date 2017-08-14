@@ -15,14 +15,14 @@ namespace BuildSystem
 
         [Header("Containers")]
         [Tooltip("List of spawnable objects")]
-        [SerializeField] BuildItemContainer buildObjectList;
+        public BuildItemContainer buildObjectList;
 
         [Header("UI")]
         [Tooltip("UI menu that you want to use to display the spawnable objects")]
-        [SerializeField] GameObject BuilderMenuPrefab;
+        public GameObject BuilderMenuPrefab;
 
         [Header("Input Settings")]
-        [SerializeField] KeyCode CollapseMenuKey = KeyCode.None;
+        public KeyCode CollapseMenuKey = KeyCode.None;
 
 
         /****************************************************

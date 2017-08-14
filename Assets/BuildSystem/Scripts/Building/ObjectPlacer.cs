@@ -21,13 +21,13 @@ namespace BuildSystem
         [Header("Place Settings")]
 
         [Tooltip("Camera used to raycast and find place position, if empty the script will try to use the main camera")]
-        [SerializeField] Camera cam;
+        public Camera cam;
 
         [Tooltip("Layers that this script will use to get hit points to place objects")]
-        [SerializeField] LayerMask groundLayer;
+        public LayerMask groundLayer;
 
         [Tooltip("Max distance from camera where you can place objects")]
-        [SerializeField] float maxPlaceDistance = 10f;
+        public float maxPlaceDistance = 10f;
 
         [Tooltip("Reccomned for FPS games")]
         [SerializeField] bool placeInScreenCenter = false;
@@ -42,22 +42,26 @@ namespace BuildSystem
         [SerializeField] float snapRotationAngle = 45;
 
         [Tooltip("Should the script reset obejct rotation to 0 or keep the previuos one. Note: works only with snap rotaion")]
-        [SerializeField] bool resetRotationAfterPlace = false;
+        public bool resetRotationAfterPlace = false;
 
         //**********************************************************************************************
         [Header("Input Settings")] 
 
         [Tooltip("Key to press to enable the builder mode. This is also used by ObjectSelector")]
-        [SerializeField] KeyCode toggleKey = KeyCode.E;
+        public KeyCode toggleKey = KeyCode.E;
 
         [Tooltip("Key to press to place a item in the scene")]
-        [SerializeField] KeyCode placeKey = KeyCode.Mouse0;
+        public KeyCode placeKey = KeyCode.Mouse0;
 
         [Tooltip("Key to press rotate (forward) the object based on snapRotaionDeg")]
-        [SerializeField] KeyCode positiveRotateKey = KeyCode.Mouse1;
+        public KeyCode positiveRotateKey = KeyCode.Mouse1;
 
         [Tooltip("Key to press rotate (backward) the object based on snapRotaionDeg")]
-        [SerializeField] KeyCode negativeRotateKey = KeyCode.None;
+        public KeyCode negativeRotateKey = KeyCode.None;
+
+        [Header("More Settings")]
+        [Tooltip("Disable the remover script when placer is active. Note: remover must be next to this script")]
+        public bool shouldToggleRemover = true;
 
         /****************************************************
         * Public variables & Classes
@@ -104,6 +108,8 @@ namespace BuildSystem
 
         Transform myTransform;
 
+        ObjectRemover object_remover;
+
         /****************************************************
         * Init
         * *************************************************/
@@ -115,6 +121,8 @@ namespace BuildSystem
             myTransform = transform;
 
             if (cam == null) Debug.LogError("Missing cam, please assign it!");
+
+            object_remover = GetComponent<ObjectRemover>();
         }
 
         /****************************************************
@@ -187,7 +195,14 @@ namespace BuildSystem
         public void Toggle(bool val)
         {
             canPlace = val;
-            if (canPlace) CreateGhostObject();
+            if (canPlace)
+            {
+                CreateGhostObject();
+                if (object_remover != null)
+                {
+                    object_remover.Activate(false);
+                }
+            }
             else DestroyGhostObject();
         }
 
@@ -542,6 +557,7 @@ namespace BuildSystem
             snapRotationAngle = angle;
         }
 
+        //TODO: add more public functions to edit settings at runtime
 
         /****************************************************
         * Debug
