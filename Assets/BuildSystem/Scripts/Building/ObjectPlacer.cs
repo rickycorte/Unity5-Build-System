@@ -45,7 +45,7 @@ namespace BuildSystem
         public bool resetRotationAfterPlace = false;
 
         [Tooltip("Keep rotating object when holding down the rotate key")]
-        bool useContinuousRotaion = false;
+        [SerializeField] bool useContinuousRotation = false;
 
         [Tooltip("Continuos rotation speed")]
         public float continuousRotationSpeed = 7f;
@@ -130,7 +130,7 @@ namespace BuildSystem
 
             object_remover = GetComponent<ObjectRemover>();
 
-            if (faceMe && useContinuousRotaion)
+            if (faceMe && useContinuousRotation)
             {
                 Debug.LogError("Settings conflict, faceMe mode can't be enabled in continuous rotation");
                 faceMe = false;
@@ -157,7 +157,7 @@ namespace BuildSystem
 
                 if (!faceMe)
                 {
-                    if (!useContinuousRotaion)
+                    if (!useContinuousRotation)
                     {
                         if (Input.GetKeyDown(positiveRotateKey))
                             AddRotation(+1,snapRotationAngle); // positive rotation
@@ -564,15 +564,15 @@ namespace BuildSystem
             {
                 case RotationMode.snap:
                     faceMe = false;
-                    useContinuousRotaion = false;
+                    useContinuousRotation = false;
                     break;
                 case RotationMode.facePlacer:
-                    useContinuousRotaion = false;
+                    useContinuousRotation = false;
                     faceMe = true;
                     break;
                 case RotationMode.continuous:
                     faceMe = false;
-                    useContinuousRotaion = true;
+                    useContinuousRotation = true;
                     break;
             }
         }

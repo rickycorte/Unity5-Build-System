@@ -26,6 +26,7 @@ namespace BuildSystem
         //**********************************************************************************************
         [Header("Hit Settings")]
         [Tooltip("Layers to use to find object to remove")]
+        
         public LayerMask hitLayers;
 
         [Tooltip("Tags of objects what will be ignored even if they are part of hit layers")]
@@ -39,12 +40,15 @@ namespace BuildSystem
 
         [Tooltip("When turned on this script will disalbe Object placer. Note: object placer must be next to this script")]
         public bool shouldDisablePlacer = true;
-      
+
+        //**********************************************************************************************
+        [Header("Outline")]
         [Tooltip("Use ouline to display selected item")]
         public bool useOutline = true;
 
         public bool useCustomOutlineColor = true;
-        [SerializeField] Color outlineColor = Color.red;
+
+        public Color outlineColor = Color.red;
 
         //**********************************************************************************************
         [Header("Input")]
