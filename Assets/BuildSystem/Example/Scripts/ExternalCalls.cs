@@ -69,11 +69,11 @@ public class ExternalCalls : MonoBehaviour {
         snapRotation = !snapRotation;
         if (snapRotation)
         {
-            op.SetRotaionMode(ObjectPlacer.RotaionMode.snap);
+            op.SetRotaionMode(ObjectPlacer.RotationMode.snap);
         }
         else
         {
-            op.SetRotaionMode(ObjectPlacer.RotaionMode.facePlacer);
+            op.SetRotaionMode(ObjectPlacer.RotationMode.facePlacer);
         }
     }
 

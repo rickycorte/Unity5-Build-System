@@ -12,6 +12,9 @@ namespace BuildSystem
         * Editor Interface
         * *************************************************/
 
+        [Tooltip("Camera used to raycast and find place position, if empty the script will try to use the main camera")]
+        public Camera cam;
+
         [Header("Object Settings")]
 
         [Tooltip("Fill this only if you don't use ObjectSelector!")]
@@ -19,9 +22,6 @@ namespace BuildSystem
 
         //**********************************************************************************************
         [Header("Place Settings")]
-
-        [Tooltip("Camera used to raycast and find place position, if empty the script will try to use the main camera")]
-        public Camera cam;
 
         [Tooltip("Layers that this script will use to get hit points to place objects")]
         public LayerMask groundLayer;
@@ -45,7 +45,7 @@ namespace BuildSystem
         public bool resetRotationAfterPlace = false;
 
         [Tooltip("Keep rotating object when holding down the rotate key")]
-        public bool useContinuousRotaion = false;
+        bool useContinuousRotaion = false;
 
         [Tooltip("Continuos rotation speed")]
         public float continuousRotationSpeed = 7f;
@@ -74,7 +74,7 @@ namespace BuildSystem
         * *************************************************/
         public enum PlaceMode { mousePos, screenCenter };
 
-        public enum RotaionMode { snap, facePlacer };
+        public enum RotationMode { snap, facePlacer, continuous };
 
         public KeyCode ToggleKey { get { return toggleKey; } }
 
@@ -129,6 +129,12 @@ namespace BuildSystem
             if (cam == null) Debug.LogError("Missing cam, please assign it!");
 
             object_remover = GetComponent<ObjectRemover>();
+
+            if (faceMe && useContinuousRotaion)
+            {
+                Debug.LogError("Settings conflict, faceMe mode can't be enabled in continuous rotation");
+                faceMe = false;
+            }
         }
 
         /****************************************************
@@ -552,15 +558,21 @@ namespace BuildSystem
         /// Set rotation mode
         /// </summary>
         /// <param name="rm">Mode</param>
-        public void SetRotaionMode(RotaionMode rm)
+        public void SetRotaionMode(RotationMode rm)
         {
             switch (rm)
             {
-                case RotaionMode.snap:
+                case RotationMode.snap:
                     faceMe = false;
+                    useContinuousRotaion = false;
                     break;
-                case RotaionMode.facePlacer:
+                case RotationMode.facePlacer:
+                    useContinuousRotaion = false;
                     faceMe = true;
+                    break;
+                case RotationMode.continuous:
+                    faceMe = false;
+                    useContinuousRotaion = true;
                     break;
             }
         }

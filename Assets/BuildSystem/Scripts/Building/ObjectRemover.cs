@@ -7,6 +7,15 @@ using cakeslice;
 namespace BuildSystem
 {
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+    * DISCLAIMER
+    * 
+    * The outline scripts and shaders are not mine, they are provided by José Guerreiro
+    * https://github.com/cakeslice/Outline-Effect
+    * https://www.assetstore.unity3d.com/en/#!/content/78608
+    * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+
     /// <summary>
     /// Component used to remove objects from the scene
     /// </summary>
@@ -14,6 +23,7 @@ namespace BuildSystem
 
         public Camera cam;
 
+        //**********************************************************************************************
         [Header("Hit Settings")]
         [Tooltip("Layers to use to find object to remove")]
         public LayerMask hitLayers;
@@ -23,6 +33,7 @@ namespace BuildSystem
 
         [SerializeField] float maxHitDistance = 10;
 
+        //**********************************************************************************************
         [Header("Behaviour settings")]
         public bool removeInScreenCenter = false;
 
@@ -34,14 +45,8 @@ namespace BuildSystem
 
         public bool useCustomOutlineColor = true;
         [SerializeField] Color outlineColor = Color.red;
-        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-         * DISCLAIMER
-         * 
-         * The outline scripts and shaders are not mine, they are provied by José Guerreiro
-         * https://github.com/cakeslice/Outline-Effect
-         * https://www.assetstore.unity3d.com/en/#!/content/78608
-         * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+        //**********************************************************************************************
         [Header("Input")]
         public KeyCode Toggle_Key = KeyCode.R;
         public KeyCode Delete_key = KeyCode.Mouse0;
@@ -121,7 +126,7 @@ namespace BuildSystem
 
 
         /****************************************************
-        * Core Functions
+        * Unity Functions
         * *************************************************/
 
         // Use this for initialization
@@ -166,6 +171,10 @@ namespace BuildSystem
                 }
             }
         }
+
+        /****************************************************
+        * Remover Core Functions
+        * *************************************************/
 
         /// <summary>
         /// Select an object to be removed if possible

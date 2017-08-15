@@ -2,7 +2,7 @@
 
 ![Logo](https://d2ujflorbtfzji.cloudfront.net/package-screenshot/89490ebf-57f8-4196-93a0-23b7d5496d0c_scaled.jpg)
 
-## Core Features
+## Place Core Features
 
 * Place items on selected physics layers
 * Automatic surface alignment
@@ -14,7 +14,19 @@
 * Place distance limit
 * Object snap rotation
 * Custom snap angle
+* Continuos rotation
 * Automatic object rotation to face camera
+* Autodisable remover if enabled
+
+## Remove Core Features
+
+* Delete objects from scene
+* Layer based selection
+* Ignored tags support (list of tags that can never be removed)
+* Selected object outline included
+* Custom outline color
+* Remove distance limit
+* Autodisable placer if enabled
 
 ## More Features
 
@@ -26,8 +38,9 @@
 
 ## Next steps
 
-* Faster ghost creation
-* Skinned mesh support
+* Faster ghost creation - Done
+* Skinned mesh support - Done
+* Remove script - Done
 
 ## What is included
 
