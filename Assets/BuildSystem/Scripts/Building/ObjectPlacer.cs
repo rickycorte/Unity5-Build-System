@@ -44,6 +44,12 @@ namespace BuildSystem
         [Tooltip("Should the script reset obejct rotation to 0 or keep the previuos one. Note: works only with snap rotaion")]
         public bool resetRotationAfterPlace = false;
 
+        [Tooltip("Keep rotating object when holding down the rotate key")]
+        public bool useContinuousRotaion = false;
+
+        [Tooltip("Continuos rotation speed")]
+        public float continuousRotationSpeed = 7f;
+
         //**********************************************************************************************
         [Header("Input Settings")] 
 
@@ -145,12 +151,23 @@ namespace BuildSystem
 
                 if (!faceMe)
                 {
+                    if (!useContinuousRotaion)
+                    {
+                        if (Input.GetKeyDown(positiveRotateKey))
+                            AddRotation(+1,snapRotationAngle); // positive rotation
 
-                    if (Input.GetKeyDown(positiveRotateKey))
-                        SnapRotation(+1); // positive rotation
+                        if (Input.GetKeyDown(negativeRotateKey))
+                            AddRotation(-1,snapRotationAngle); // negative rotation
+                    }
+                    else
+                    {
+                        if (Input.GetKey(positiveRotateKey))
+                            AddRotation(+1, continuousRotationSpeed * Time.deltaTime); // positive rotation
 
-                    if (Input.GetKeyDown(negativeRotateKey))
-                        SnapRotation(-1); // negative rotation
+                        if (Input.GetKey(negativeRotateKey))
+                            AddRotation(-1, continuousRotationSpeed * Time.deltaTime); // negative rotation
+                    }
+
                 }
             }
 
@@ -170,7 +187,7 @@ namespace BuildSystem
                 //update rotation to face the placer
                 if (faceMe)
                 {
-                    snapRotationAngle =  GetFaceToRotation(myTransform, ghostObjInstance);
+                    objectSnapCurrentRotaion =  GetFaceToRotation(myTransform, ghostObjInstance);
                 }
             }
         }
@@ -380,14 +397,14 @@ namespace BuildSystem
         }
 
         /// <summary>
-        /// Snap rotation of the object
+        /// Add amout rotation with dir mult
         /// </summary>
-        /// <param name="mult">Rotation multiplier</param>
-        void SnapRotation(int mult)
+        /// <param name="mult">Direction to add rotation</param>
+        /// <param name="amount">Degs to add to rotation</param>
+        void AddRotation(int mult, float amount)
         {
-            objectSnapCurrentRotaion += mult * snapRotationAngle;
+            objectSnapCurrentRotaion += mult * amount;
         }
-
 
         /****************************************************
         * Pivot helpers

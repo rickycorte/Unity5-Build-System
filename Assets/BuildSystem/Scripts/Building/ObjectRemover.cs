@@ -8,11 +8,11 @@ namespace BuildSystem
 {
 
     /// <summary>
-    /// Remove placed objects
+    /// Component used to remove objects from the scene
     /// </summary>
     public class ObjectRemover : MonoBehaviour {
 
-        [SerializeField] Camera cam;
+        public Camera cam;
 
         [Header("Hit Settings")]
         [Tooltip("Layers to use to find object to remove")]
